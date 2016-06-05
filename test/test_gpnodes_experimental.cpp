@@ -59,3 +59,10 @@ TEST_F(GPNodesExperimentalTest, CalculatesNumberOfConnectedStones) {
     ASSERT_EQ(3, black.get(board));
     ASSERT_EQ(4, white.get(board));
 }
+
+TEST_F(GPNodesExperimentalTest, CalulatesNumberOfConnectedStonesAndDoesntWrap) {
+    auto black = ChainLengthNode(BLACK);
+    board.set(0, 1, BLACK);
+    board.set(4, 0, BLACK);
+    ASSERT_EQ(0, black.get(board));
+}

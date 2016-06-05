@@ -102,20 +102,19 @@ string TerritoryNode::toString() const {
 ChainLengthNode::ChainLengthNode(Color color): color(color) { }
 
 int countConnectedChains(int x, int y, Color color, const Board& b, Bitset& visited) {
-    const int directions[] = {-b.size, b.size, -1, 1};
-    auto isOOB = [&b](int i) {
-        return i < 0 || i >= b.size * b.size;
+    const int directions[][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    auto isOOB = [&b](int x, int y) {
+        return x < 0 || y < 0 || x >= b.size || y >= b.size;
     };
 
     int count = 1;
-    int i = x + y * b.size;
     visited.set(x + y * b.size, true);
-    for (int dir: directions) {
-        int ii = i + dir;
-        int x = ii % b.size;
-        int y = ii / b.size;
-        if (!isOOB(ii) && !visited.get(ii) && b.get(x, y) == color) {
-            count += countConnectedChains(x, y, color, b, visited);
+    for (auto dir: directions) {
+        int xx = x + dir[0],
+            yy = y + dir[1];
+        int ii = xx + yy * b.size;
+        if (!isOOB(xx, yy) && !visited.get(ii) && b.get(xx, yy) == color) {
+            count += countConnectedChains(xx, yy, color, b, visited);
         }
     }
     return count;

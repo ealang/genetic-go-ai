@@ -7,20 +7,20 @@
 using namespace std;
 
 int main() {
-    int boardSize = 5, numRounds = 10, numAI = 10;
+    int boardSize = 5, numRounds = 20, numAI = 20;
     auto ai = generateAI(boardSize, numRounds, numAI);
     cout << ai->toString() << endl;
 
     while (true) {
         cout << "=======================================" << endl;
-        Color turn = BLACK;
+        Color turn = WHITE;
         Board b(boardSize);
         int nturns = (int)(boardSize * boardSize * 0.8);
         for (int i = 0; i < nturns; i++) {
             cout << "move " << i + 1 << " of " << nturns << endl;
             int x, y;
-            if (turn == BLACK) {
-                auto move = getBestMove(b, *ai, BLACK);
+            if (turn == WHITE) {
+                auto move = getBestMove(b, *ai, turn);
                 cout << "ai move: " << move.x + 1 << " " << move.y + 1 << endl;
                 x = move.x;
                 y = move.y;
@@ -39,7 +39,7 @@ int main() {
             cout << b.toString();
             turn = turn == BLACK ? WHITE : BLACK;
         }
-        cout << "ai territory: " << b.blackTerritory() << endl << "your territory: " << b.whiteTerritory() << endl;
+        cout << "ai territory: " << b.whiteTerritory() << endl << "your territory: " << b.blackTerritory() << endl;
     }
     return 0;
 }

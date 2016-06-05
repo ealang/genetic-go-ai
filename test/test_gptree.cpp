@@ -37,11 +37,11 @@ TEST_F(GPTreeTest, CanFindNodeByNumber) {
     auto c2 = ConstNode(2), c3 = ConstNode(3), c4 = ConstNode(4);
     auto n1 = PlusNode(&c2, &c3);
     auto n0 = PlusNode(&n1, &c4);
-    ASSERT_EQ(9, treeGetNodeNum(&n0, 0)->get(board));
-    ASSERT_EQ(5, treeGetNodeNum(&n0, 1)->get(board));
-    ASSERT_EQ(2, treeGetNodeNum(&n0, 2)->get(board));
-    ASSERT_EQ(3, treeGetNodeNum(&n0, 3)->get(board));
-    ASSERT_EQ(4, treeGetNodeNum(&n0, 4)->get(board));
+    ASSERT_EQ(&n0, treeGetNodeNum(&n0, 0));
+    ASSERT_EQ(&n1, treeGetNodeNum(&n0, 1));
+    ASSERT_EQ(&c2, treeGetNodeNum(&n0, 2));
+    ASSERT_EQ(&c3, treeGetNodeNum(&n0, 3));
+    ASSERT_EQ(&c4, treeGetNodeNum(&n0, 4));
     ASSERT_EQ(nullptr, treeGetNodeNum(&n0, 5));
 }
 

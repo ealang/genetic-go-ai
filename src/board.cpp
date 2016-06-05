@@ -1,11 +1,19 @@
 #include <cstring>
 #include <sstream>
-#include <unordered_set>
 #include <stack>
 #include "color.h"
+#include "bitset.h"
 #include "board.h"
 
 using namespace std;
+
+struct Direction {
+    const int x, y;
+};
+const Direction DIRECTIONS[] = {Direction{-1, 0},
+                                Direction{1, 0},
+                                Direction{0, -1},
+                                Direction{0, 1}};
 
 Board::Board(int size): size(size), nused(0)  {
 }
@@ -69,15 +77,14 @@ int Board::toBoardNum(int x, int y) const {
 }
 
 int Board::countTerritoryFor(Color myColor) const {
-    std::unordered_set<int> visited;
+    Bitset visited(size * size);
     auto explorePoint = [this, &visited, &myColor](int startPoint) {
-        auto isOOB = [this](int i) {
-            int x = i % size;
-            int y = i / size;
+        auto isOOB = [this](int x, int y) {
             return x < 0 || y < 0 || x >= size || y >= size;
         };
-
-        const int directions[] = {-1, 1, -size, size};
+        auto iToX = [this](int i) { return i % size; };
+        auto iToY = [this](int i) { return i / size; };
+        auto xyToI = [this](int x, int y) { return x + y * size; };
 
         int count = 0;
         bool touchMyTerritory = false, touchEnemyTerritory = false;
@@ -86,15 +93,17 @@ int Board::countTerritoryFor(Color myColor) const {
 
         while (toVisit.size() > 0) {
             int i = toVisit.top(); toVisit.pop();
-            if (!visited.count(i)) {
-                visited.insert(i);
+            if (!visited.get(i)) {
+                visited.set(i, true);
                 ++count;
-                for (int dir: directions) {
-                    int ii = i + dir;
-                    if (!isOOB(ii)) {
-                        Color c = get(ii);
+
+                for (auto dir: DIRECTIONS) {
+                    int x = iToX(i) + dir.x, 
+                        y = iToY(i) + dir.y;
+                    if (!isOOB(x, y)) {
+                        Color c = get(x, y);
                         if (c == NONE) 
-                            toVisit.push(ii);
+                            toVisit.push(xyToI(x, y));
                         else if (c == myColor) {
                             touchMyTerritory = true;
                         } else {
@@ -115,7 +124,7 @@ int Board::countTerritoryFor(Color myColor) const {
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < size; y++) {
             int i = toBoardNum(x, y);
-            if (!visited.count(i) && empty(x, y)) {
+            if (!visited.get(i) && empty(x, y)) {
                 territoryCount += explorePoint(i);
             }
         }
