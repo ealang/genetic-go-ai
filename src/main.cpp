@@ -39,7 +39,8 @@ int main() {
             cout << b.toString();
             turn = turn == BLACK ? WHITE : BLACK;
         }
-        cout << "ai territory: " << b.whiteTerritory() << endl << "your territory: " << b.blackTerritory() << endl;
+        cout << "ai score: " << b.score(WHITE) << endl <<
+                "your score: " << b.score(BLACK) << endl;
     }
     return 0;
 }

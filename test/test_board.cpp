@@ -15,13 +15,6 @@ TEST(BoardTest, CanGenerateAStringRepresentation) {
     ASSERT_EQ("|B| |\n-----\n| |W|\n-----\n", b.toString());
 }
 
-TEST(BoardTest, CanDetecWhenBoardIsFull) {
-    Board b(1);
-    ASSERT_FALSE(b.full());
-    b.set(0, 0, BLACK);
-    ASSERT_TRUE(b.full());
-}
-
 TEST(BoardTest, CanModifyAndReadBoardState) {
     Board b(9);
     ASSERT_TRUE(b.empty(0, 0));
@@ -36,30 +29,30 @@ TEST(BoardTest, CanModifyAndReadBoardState) {
 
 TEST(BoardTest, CalculatesMultiCellPlayerTerritory) {
     Board b(4);
-    ASSERT_EQ(0, b.blackTerritory());
-    ASSERT_EQ(0, b.whiteTerritory());
+    ASSERT_EQ(0, b.territoryCount(BLACK));
+    ASSERT_EQ(0, b.territoryCount(WHITE));
 
     b.set(1, 0, WHITE);
     b.set(0, 1, WHITE);
     b.set(1, 1, WHITE);
     b.set(2, 1, WHITE);
     b.set(3, 1, WHITE);
-    ASSERT_EQ(0, b.blackTerritory());
-    ASSERT_EQ(11, b.whiteTerritory());
+    ASSERT_EQ(0, b.territoryCount(BLACK));
+    ASSERT_EQ(11, b.territoryCount(WHITE));
 
     b.set(3, 3, BLACK);
-    ASSERT_EQ(0, b.blackTerritory());
-    ASSERT_EQ(3, b.whiteTerritory());
+    ASSERT_EQ(0, b.territoryCount(BLACK));
+    ASSERT_EQ(3, b.territoryCount(WHITE));
 
     b.set(0, 2, BLACK);
     b.set(1, 2, BLACK);
     b.set(2, 2, BLACK);
     b.set(3, 2, BLACK);
-    ASSERT_EQ(3, b.blackTerritory());
-    ASSERT_EQ(3, b.whiteTerritory());
+    ASSERT_EQ(3, b.territoryCount(BLACK));
+    ASSERT_EQ(3, b.territoryCount(WHITE));
 }
 
-TEST(BoardTest, CalculatesSingleCellPlayerAndDoesntWrap) {
+TEST(BoardTest, CalculatesSingleCellPlayerTerritory) {
     Board b(5);
     b.set(0, 0, BLACK);
     b.set(0, 2, BLACK);
@@ -73,12 +66,73 @@ TEST(BoardTest, CalculatesSingleCellPlayerAndDoesntWrap) {
     b.set(0, 4, WHITE);
     b.set(2, 4, WHITE);
     b.set(4, 4, WHITE);
-    ASSERT_EQ(0, b.blackTerritory());
-    ASSERT_EQ(7, b.whiteTerritory());
+    ASSERT_EQ(0, b.territoryCount(BLACK));
+    ASSERT_EQ(7, b.territoryCount(WHITE));
 }
 
 TEST(BoardTest, ThrowsExceptionWhenMakingInvalidMove) {
     Board b(9);
     b.set(0, 0, BLACK);
     ASSERT_THROW(b.set(0, 0, BLACK), std::runtime_error);
+}
+
+TEST(BoardTest, CapturesSingleOpponentPiece) {
+    Board b(3);
+    b.set(0, 1, BLACK);
+    b.set(2, 1, BLACK);
+    b.set(1, 0, BLACK);
+    b.set(1, 1, WHITE);
+    b.set(1, 2, BLACK);
+
+    ASSERT_EQ(NONE, b.get(1, 1));
+    ASSERT_EQ(1, b.captureCount(BLACK));
+    ASSERT_EQ(0, b.captureCount(WHITE));
+}
+
+TEST(BoardTest, CapturesTerritoryAlongWall) {
+    Board b(3);
+    b.set(0, 0, BLACK);
+    b.set(0, 1, BLACK);
+    b.set(0, 2, BLACK);
+    b.set(1, 0, WHITE);
+    b.set(1, 1, WHITE);
+    ASSERT_EQ(0, b.captureCount(BLACK));
+    ASSERT_EQ(0, b.captureCount(WHITE));
+    b.set(1, 2, WHITE);
+    ASSERT_EQ(0, b.captureCount(BLACK));
+    ASSERT_EQ(3, b.captureCount(WHITE));
+
+    ASSERT_EQ(NONE, b.get(0, 0));
+    ASSERT_EQ(NONE, b.get(0, 1));
+    ASSERT_EQ(NONE, b.get(0, 2));
+}
+
+TEST(BoardTest, CalculatesCapturesFromLastPlacedStone) {
+    Board b(3);
+    b.set(1, 0, WHITE);
+    b.set(0, 1, WHITE);
+
+    b.set(1, 1, BLACK);
+    b.set(0, 2, BLACK);
+    b.set(0, 0, BLACK);
+
+    EXPECT_EQ(1, b.captureCount(BLACK));
+    EXPECT_EQ(0, b.captureCount(WHITE));
+    EXPECT_EQ(NONE, b.get(0, 1));
+}
+
+TEST(BoardTest, CalculatesPlayerScoreAsTerritoryPlusCaptures) {
+    Board b(4);
+    b.set(0, 0, BLACK);
+    b.set(3, 3, BLACK);
+    b.set(1, 0, WHITE);
+    b.set(1, 1, WHITE);
+    b.set(0, 1, WHITE);
+
+    ASSERT_EQ(0, b.captureCount(BLACK));
+    ASSERT_EQ(1, b.captureCount(WHITE));
+    ASSERT_EQ(0, b.territoryCount(BLACK));
+    ASSERT_EQ(1, b.territoryCount(WHITE));
+    ASSERT_EQ(2, b.score(WHITE));
+    ASSERT_EQ(0, b.score(BLACK));
 }

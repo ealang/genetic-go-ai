@@ -18,14 +18,3 @@ TEST(AIMatchTest, CanGetMove) {
     EXPECT_EQ(8, move.x);
     EXPECT_EQ(8, move.y);
 }
-
-TEST(AIMatchTest, ThrowsExceptionWhenNoMovesPossible) {
-    auto board = Board(2);
-    board.set(0, 0, WHITE);
-    board.set(0, 1, WHITE);
-    board.set(1, 0, WHITE);
-    board.set(1, 1, WHITE);
-    auto node = ConstNode(1);
-
-    ASSERT_THROW(getBestMove(board, node, BLACK), std::runtime_error);
-}

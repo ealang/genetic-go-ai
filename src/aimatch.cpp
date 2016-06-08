@@ -34,11 +34,13 @@ MatchResult playAIMatch(const GPNode& black, const GPNode& white, int boardSize,
 
     int nturns = 0;
     Color turn = BLACK;
-    while (!board.full() && (nturns < turnLimit || turnLimit == -1)) {
+    while ((nturns < turnLimit || turnLimit == -1) && nturns < boardSize * boardSize) {
         auto move = getBestMove(board, turn == BLACK ? black : white, turn);
         board.set(move.x, move.y, turn);
         turn = nextTurn(turn);
         ++nturns;
     }
-    return MatchResult {board.blackTerritory(), board.whiteTerritory(), nturns};
+    return MatchResult {board.score(BLACK),
+                        board.score(WHITE),
+                        nturns};
 }

@@ -2,7 +2,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "gpnodes_experimental.h"
-#include "bitset.h"
+#include "bitset2d.h"
 #include "board.h"
 
 using namespace std;
@@ -83,8 +83,7 @@ string RandomNode::toString() const {
 TerritoryNode::TerritoryNode(Color color): color(color) { }
 
 int TerritoryNode::get(const Board& board) const {
-    if (color == BLACK) return board.blackTerritory();
-    else return board.whiteTerritory();
+    return board.territoryCount(color);
 }
 
 GPNode* TerritoryNode::clone() const {
@@ -101,39 +100,23 @@ string TerritoryNode::toString() const {
 
 ChainLengthNode::ChainLengthNode(Color color): color(color) { }
 
-int countConnectedChains(int x, int y, Color color, const Board& b, Bitset& visited) {
-    const int directions[][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
-    auto isOOB = [&b](int x, int y) {
-        return x < 0 || y < 0 || x >= b.size || y >= b.size;
-    };
-
-    int count = 1;
-    visited.set(x + y * b.size, true);
-    for (auto dir: directions) {
-        int xx = x + dir[0],
-            yy = y + dir[1];
-        int ii = xx + yy * b.size;
-        if (!isOOB(xx, yy) && !visited.get(ii) && b.get(xx, yy) == color) {
-            count += countConnectedChains(xx, yy, color, b, visited);
-        }
-    }
-    return count;
-
-}
-
 int ChainLengthNode::get(const Board& b) const {
     int len = 0;
-    Bitset visited(b.size * b.size);
-    for (int x = 0; x < b.size; x++) {
-        for (int y = 0; y < b.size; y++) {
-            if (b.get(x, y) == color && !visited.get(x + y * b.size)) {
-                int chainlen = countConnectedChains(x, y, color, b, visited);
-                if (chainlen > 1) {
-                    len += chainlen;
-                }
+    Bitset2D visited(b.size, b.size);
+    b.iterateBoard([&](int x, int y) {
+        if (b.get(x, y) == color && !visited.get(x, y)) {
+            int count = 0;
+            b.iterateConnectedStones(x, y, [&](int x, int y) {
+                visited.set(x, y, true);
+                ++count;
+                return true;
+            });
+            if (count > 1) {
+                len += count;
             }
         }
-    }
+        return true;
+    });
     return len;
 }
 
