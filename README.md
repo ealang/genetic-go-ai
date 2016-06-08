@@ -18,3 +18,7 @@ Run tests (Google test framework is required):
 Run main app to train a bot and play against it:
 
     make run_main
+
+Run main app and graph ai progress:
+
+    make run_graph

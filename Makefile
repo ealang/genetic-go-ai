@@ -16,6 +16,10 @@ run_test: testexe
 run_main: mainexe
 	@./mainexe
 
+.PHONY: run_graph
+run_graph: mainexe
+	@./mainexe graph | python graph_progress.py
+
 testexe: $(TEST_OBJS)
 	@g++ -o $@ $^ $(TEST_LIBS)  
 
