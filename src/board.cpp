@@ -11,10 +11,10 @@ using namespace std;
 struct Direction {
     const int x, y;
 };
-const Direction DIRECTIONS[] = {Direction{-1, 0},
-                                Direction{1, 0},
-                                Direction{0, -1},
-                                Direction{0, 1}};
+static const Direction DIRECTIONS[] = {Direction{-1, 0},
+                                       Direction{1, 0},
+                                       Direction{0, -1},
+                                       Direction{0, 1}};
 
 Board::Board(int size): size(size), board(BoardStorage(size)),
     blackCaptures(0),

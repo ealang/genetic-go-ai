@@ -16,7 +16,7 @@ GPNode* createRandomTree(int depth) {
 
 PlusNode::PlusNode(GPNode* l, GPNode* r) : GPOperatorNode(l, r) { }
 
-int PlusNode::get(const Board& b) const { return nodes[0]->get(b) + nodes[1]->get(b); }
+int PlusNode::getUnscaled(const Board& b) const { return nodes[0]->get(b) + nodes[1]->get(b); }
 
 GPNode* PlusNode::clone() const {
     return new PlusNode(nodes[0]->clone(), nodes[1]->clone());
@@ -32,7 +32,7 @@ string PlusNode::toString() const {
 
 MultiplyNode::MultiplyNode(GPNode* l, GPNode* r) : GPOperatorNode(l, r) { }
 
-int MultiplyNode::get(const Board& b) const { return nodes[0]->get(b) * nodes[1]->get(b); }
+int MultiplyNode::getUnscaled(const Board& b) const { return nodes[0]->get(b) * nodes[1]->get(b); }
 
 GPNode* MultiplyNode::clone() const {
     return new MultiplyNode(nodes[0]->clone(), nodes[1]->clone());
@@ -48,7 +48,7 @@ string MultiplyNode::toString() const {
 
 ConstNode::ConstNode(int v): v(v) {}
 
-int ConstNode::get(const Board&) const { return v; }
+int ConstNode::getUnscaled(const Board&) const { return v; }
 
 GPNode* ConstNode::clone() const {
     return new ConstNode(v);
@@ -64,7 +64,7 @@ string ConstNode::toString() const {
 
 RandomNode::RandomNode(int min, int max): min(min), max(max) { }
 
-int RandomNode::get(const Board&) const {
+int RandomNode::getUnscaled(const Board&) const {
     return min + rand() % (max - min);
 }
 
@@ -82,7 +82,7 @@ string RandomNode::toString() const {
 
 TerritoryNode::TerritoryNode(Color color): color(color) { }
 
-int TerritoryNode::get(const Board& board) const {
+int TerritoryNode::getUnscaled(const Board& board) const {
     return board.territoryCount(color);
 }
 
@@ -100,7 +100,7 @@ string TerritoryNode::toString() const {
 
 ChainLengthNode::ChainLengthNode(Color color): color(color) { }
 
-int ChainLengthNode::get(const Board& b) const {
+int ChainLengthNode::getUnscaled(const Board& b) const {
     int len = 0;
     Bitset2D visited(b.size, b.size);
     b.iterateBoard([&](int x, int y) {
@@ -130,20 +130,62 @@ string ChainLengthNode::toString() const {
     return ss.str();
 }
 
+/* PlayerScoreNode */
+ 
+PlayerScoreNode::PlayerScoreNode(Color color): color(color) { }
+
+int PlayerScoreNode::getUnscaled(const Board& board) const {
+    return board.score(color);
+}
+
+GPNode* PlayerScoreNode::clone() const {
+    return new PlayerScoreNode(color);
+}
+
+string PlayerScoreNode::toString() const {
+    stringstream ss;
+    ss << "PlayerScoreNode(" << (color == BLACK ? "black" : "white") << ")";
+    return ss.str();
+}
+
+/* PlayerCaptureNode */
+ 
+PlayerCaptureNode::PlayerCaptureNode(Color color): color(color) { }
+
+int PlayerCaptureNode::getUnscaled(const Board& board) const {
+    return board.captureCount(color);
+}
+
+GPNode* PlayerCaptureNode::clone() const {
+    return new PlayerCaptureNode(color);
+}
+
+string PlayerCaptureNode::toString() const {
+    stringstream ss;
+    ss << "PlayerCaptureNode(" << (color == BLACK ? "black" : "white") << ")";
+    return ss.str();
+}
+
 /* random tree */
 
 GPNode* createRandomNode(int curDepth, int maxDepth) {
     static const int CONST_MIN = -10, CONST_MAX = 10;
+    auto randcolor = [](){ return rand() % 2 == 0 ? BLACK : WHITE; };
+
     if (curDepth == maxDepth) {
-        switch(rand() % 4) {
+        switch(rand() % 6) {
             case 0:
                 return new ConstNode(CONST_MIN + rand() % (CONST_MAX - CONST_MIN));
             case 1:
                 return new RandomNode(CONST_MIN, CONST_MAX);
             case 2:
-                return new TerritoryNode(rand() % 2 == 0 ? BLACK : WHITE);
+                return new TerritoryNode(randcolor());
             case 3:
-                return new ChainLengthNode(rand() % 2 == 0 ? BLACK : WHITE);
+                return new ChainLengthNode(randcolor());
+            case 4:
+                return new PlayerScoreNode(randcolor());
+            case 5:
+                return new PlayerCaptureNode(randcolor());
         }
     } else {
         switch(rand() % 2) {

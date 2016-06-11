@@ -1,7 +1,10 @@
+#include <utility>
 #include "gtest/gtest.h"
 #include "gpnodes_experimental.h"
 #include "gptree.h"
 #include "board.h"
+
+using namespace std;
 
 class GPTreeTest: public ::testing::Test {
 public:
@@ -58,15 +61,27 @@ TEST_F(GPTreeTest, CanSubstituteTrees) {
     }
 }
 
-TEST_F(GPTreeTest, CanRandomlyCombineTrees) {
-    GPNode* tree1 = createRandomTree(4);
-    GPNode* tree2 = createRandomTree(4);
-    GPNode* tree3 = mutateCombineTrees(tree1, tree2);
-    tree3->get(board);
+TEST_F(GPTreeTest, CanRandomlySwapSubtreesWithNoNodeLoss) {
+    ConstNode c1 = ConstNode(1),
+              c2 = ConstNode(2),
+              c3 = ConstNode(4),
+              c4 = ConstNode(8),
+              c5 = ConstNode(16),
+              c6 = ConstNode(32);
+    PlusNode n1 = PlusNode(&c1, &c2);
+    PlusNode n2 = PlusNode(&n1, &c3);
+    PlusNode n3 = PlusNode(&c4, &c5);
+    PlusNode n4 = PlusNode(&n3, &c6);
 
-    ASSERT_LT(treeDepth(tree3), 9);
+    ASSERT_EQ(1 + 2 + 4, n2.get(board));
+    ASSERT_EQ(32 + 16 + 8, n4.get(board));
 
-    cleanupTree(tree1);
-    cleanupTree(tree2);
-    cleanupTree(tree3);
+    auto trees = swapRandomSubtrees(&n2, &n4);
+
+    ASSERT_NE(trees.first->get(board), n2.get(board));
+    ASSERT_NE(trees.second->get(board), n4.get(board));
+    ASSERT_EQ(63, trees.first->get(board) + trees.second->get(board));
+
+    cleanupTree(trees.first);
+    cleanupTree(trees.second);
 }

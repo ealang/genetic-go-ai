@@ -1,12 +1,15 @@
 #include <cstdlib>
+#include <functional>
 #include "gptree.h"
 #include "gpnodes_experimental.h"
+
+using namespace std;
 
 int max(int a, int b) {
     return (a > b) ? a : b;
 }
 
-void cleanupTree(GPNode* tree) {
+void cleanupTree(const GPNode* tree) {
     for (auto child: tree->children()) {
         cleanupTree(child);
     }
@@ -29,60 +32,68 @@ int treeNodeCount(const GPNode* tree) {
     return count;
 }
 
-const GPNode* treeGetNodeNum_(const GPNode* tree, const int num, int& i);
 const GPNode* treeGetNodeNum(const GPNode* tree, int num) {
     int i = 0;
-    return treeGetNodeNum_(tree, num, i);
-}
-const GPNode* treeGetNodeNum_(const GPNode* tree, const int num, int& i) {
-    if (i == num) {
-        return tree;
-    } else {
-        for (auto child: tree->children()) {
-            const GPNode* searchNode = treeGetNodeNum_(child, num, ++i);
-            if (searchNode != nullptr) {
-                return searchNode;
+    function<const GPNode*(const GPNode*)> r = [&i, num, &r](const GPNode* node) {
+        if (i++ == num) {
+            return node;
+        } else {
+            for (auto child: node->children()) {
+                const GPNode* searchNode = r(child);
+                if (searchNode != nullptr) {
+                    return searchNode;
+                }
             }
+            return (const GPNode*)nullptr;
         }
-        return nullptr;
-    }
+    };
+    return r(tree);
 }
 
-// substitute tree2 into tree1 at num, returning a new tree
-GPNode* treeReplaceAt_(GPNode* tree1, const int num, GPNode* tree2, int& i, GPNode* parent, int parentIndex);
 GPNode* treeReplaceAt(const GPNode* tree1, int num, const GPNode* tree2) {
+    int curNode = 0;
+    function<GPNode*(GPNode*, GPNode*, int)> r = [&](GPNode* node, GPNode* parent, int parentIndex) {
+        if (curNode == num) {
+            return parent->replaceChild(parentIndex, tree2->clone());
+        } else {
+            int childI = 0;
+            for (auto child: node->children()) {
+                ++curNode;
+                GPNode* replaced = r(child, node, childI);
+                if (replaced != nullptr) {
+                    return replaced;
+                }
+                ++childI;
+            }
+            return (GPNode*)nullptr;
+        }
+    };
+
     if (num == 0) {
         return tree2->clone();
     } else {
-        int i = 0;
         GPNode* newTree = tree1->clone();
-        cleanupTree(treeReplaceAt_(newTree, num, tree2->clone(), i, nullptr, -1));
+        GPNode* discardedTree = r(newTree, nullptr, -1);
+        cleanupTree(discardedTree);
         return newTree;
     }
 }
-GPNode* treeReplaceAt_(GPNode* tree1, const int num, GPNode* tree2, int& i, GPNode* parent, int parentIndex) {
-    if (i == num) {
-        return parent->replaceChild(parentIndex, tree2);
-    } else {
-        int childI = 0;
-        for (auto child: tree1->children()) {
-            GPNode* replaced = treeReplaceAt_(child, num, tree2, ++i, tree1, childI);
-            if (replaced != nullptr) {
-                return replaced;
-            }
-            ++childI;
-        }
-        return nullptr;
-    }
+
+pair<GPNode*, GPNode*> swapRandomSubtrees(const GPNode* tree1, const GPNode* tree2) {
+    int count1 = treeNodeCount(tree1),
+        count2 = treeNodeCount(tree2),
+        sub1 = rand() % count1,
+        sub2 = rand() % count2;
+    const GPNode* subtree1 = treeGetNodeNum(tree1, sub1),
+                * subtree2 = treeGetNodeNum(tree2, sub2);
+
+    return make_pair(treeReplaceAt(tree1, sub1, subtree2),
+                     treeReplaceAt(tree2, sub2, subtree1));
 }
 
-GPNode* mutateCombineTrees(const GPNode* tree1, const GPNode* tree2) {
-    if (rand() % 2 == 0) {
-        std::swap(tree1, tree2);
-    }
+GPNode* swapRandomSubtree(const GPNode* tree1, const GPNode* tree2) {
     int count1 = treeNodeCount(tree1),
         count2 = treeNodeCount(tree2);
-    const GPNode* subtree2 = treeGetNodeNum(tree2, rand() % count2);
-
-    return treeReplaceAt(tree1, rand() % count1, subtree2);
+    const GPNode* subtree1 = treeGetNodeNum(tree1, rand() % count1);
+    return treeReplaceAt(tree2, rand() % count2, subtree1);
 }

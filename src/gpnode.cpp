@@ -5,7 +5,17 @@ using namespace std;
 
 /* GPNode */
 
+GPNode::GPNode(): scale(1) { }
+
 GPNode::~GPNode() { }
+
+int GPNode::get(const Board& context) const {
+    return getUnscaled(context) * scale;
+}
+
+void GPNode::setScale(int val) {
+    scale = val;
+}
 
 /* Operator Node */
 

@@ -8,17 +8,17 @@
 using namespace std;
 
 class MyOperatorNode: public GPOperatorNode {
+    int getUnscaled(const Board&) const override { return 1; }
 public:
     MyOperatorNode(GPNode* a, GPNode* b)
         : GPOperatorNode(a, b) { }
-    int get(const Board& ) const override { return 0; }
     GPNode* clone() const { return nullptr; };
 };
 
 class MyTerminalNode: public GPTerminalNode {
+    int getUnscaled(const Board& ) const override { return 1; }
 public:
     MyTerminalNode() {}
-    int get(const Board& ) const override { return 0; }
     GPNode* clone() const { return nullptr; };
 };
 
@@ -32,4 +32,14 @@ TEST(GPNodeTest, OperatorNodeReturnsChildren) {
 
 TEST(GPNodeTest, TerminalNodeHasNoChildren) {
     ASSERT_EQ(0, MyTerminalNode().children().size());
+}
+
+TEST(GPNodeTest, NodeValueHasAdjustableScale) {
+    Board b(9);
+    MyTerminalNode node;
+    ASSERT_EQ(1, node.get(b));
+    node.setScale(-2);
+    ASSERT_EQ(-2, node.get(b));
+    node.setScale(0);
+    ASSERT_EQ(0, node.get(b));
 }

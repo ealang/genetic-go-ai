@@ -8,8 +8,12 @@ class Board;
 class GPNode;
 
 class GPNode {
+    int scale;
+    virtual int getUnscaled(const Board& context) const = 0;
 public:
-    virtual int get(const Board& context) const = 0;
+    GPNode();
+    int get(const Board& context) const;
+    void setScale(int);
     virtual std::vector<GPNode*> children() const = 0;
     virtual GPNode* replaceChild(int num, GPNode* other) = 0;
     virtual GPNode* clone() const = 0;
@@ -30,7 +34,6 @@ public:
 
 // Node with no children
 class GPTerminalNode: public GPNode {
-protected:
 public:
     std::vector<GPNode*> children() const override;
     GPNode* replaceChild(int num, GPNode* other) override;

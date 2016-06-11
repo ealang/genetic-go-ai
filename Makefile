@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 TEST_LIBS = -lgtest -lpthread -lgtest_main
 
 MAIN_SRC = $(wildcard src/*.cpp)
@@ -14,11 +16,11 @@ run_test: testexe
 
 .PHONY: run_main
 run_main: mainexe
-	@./mainexe
+	@./mainexe --play
 
 .PHONY: run_graph
 run_graph: mainexe
-	@./mainexe graph | python graph_progress.py
+	./mainexe | tee >(python graph_progress.py)
 
 testexe: $(TEST_OBJS)
 	@g++ -o $@ $^ $(TEST_LIBS)  

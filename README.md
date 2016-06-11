@@ -6,8 +6,6 @@ Work in progress AI for Go using genetic programming.
 
 * Some Go rules have not been implemented
 * Implement more functions and sensors for the AI to use
-* Implement more mutation types
-* Tweak how next generation is created from the current
 
 # Instructions
 
