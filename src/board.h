@@ -18,6 +18,7 @@ public:
     int territoryCount(Color) const;
     int captureCount(Color) const;
     int score(Color) const;
+    bool isSuicideMove(int x, int y, Color forColor) const;
 
     std::string toString() const;
 

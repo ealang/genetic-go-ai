@@ -41,6 +41,13 @@ int Board::score(Color c) const {
     return territoryCount(c) + captureCount(c);
 }
 
+bool Board::isSuicideMove(int x, int y, Color forColor) const {
+    Color enemyColor = otherColor(forColor);
+    Board possible = *this;
+    possible.set(x, y, forColor);
+    return captureCount(enemyColor) < possible.captureCount(enemyColor);
+}
+
 string Board::toString() const {
     stringstream ss;
     char chars[] = {' ', 'B', 'W'};
@@ -58,7 +65,9 @@ string Board::toString() const {
 }
 
 void Board::set(int x, int y, Color color) {
-    if (!empty(x, y) && color != NONE) {
+    if (isOutOfBounds(x, y)) {
+        throw runtime_error("Cell is out of bounds");
+    } else if (!empty(x, y) && color != NONE) {
         throw runtime_error("Cell already occupied");
     } else {
         board.set(x, y, color);

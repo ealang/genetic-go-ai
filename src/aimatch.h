@@ -8,6 +8,7 @@ class GPNode;
 
 struct Move {
     int x, y;
+    bool operator!=(const Move& other) const;
 };
 
 Move getBestMove(const Board& board, const GPNode& aiLogic, Color color);

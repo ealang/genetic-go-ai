@@ -3,4 +3,6 @@
 
 enum Color { NONE, BLACK, WHITE };
 
+Color otherColor(Color);
+
 #endif

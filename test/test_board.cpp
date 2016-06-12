@@ -15,6 +15,41 @@ TEST(BoardTest, CanGenerateAStringRepresentation) {
     ASSERT_EQ("|B| |\n-----\n| |W|\n-----\n", b.toString());
 }
 
+TEST(BoardTest, ThrowsWhenPlaceStoneOutOfBounds) {
+    Board b(2);
+    ASSERT_THROW(b.set(-1, 0, BLACK), std::runtime_error);
+    ASSERT_THROW(b.set(0, 2, BLACK), std::runtime_error);
+    ASSERT_THROW(b.set(2, 2, BLACK), std::runtime_error);
+}
+
+TEST(BoardTest, CanDetectSuicideMovesForSingleStone) {
+    Board b(2);
+    b.set(0, 1, BLACK);
+    b.set(1, 0, BLACK);
+    ASSERT_TRUE(b.isSuicideMove(0, 0, WHITE));
+    ASSERT_FALSE(b.isSuicideMove(0, 0, BLACK));
+}
+
+TEST(BoardTest, CanDetectSuicideMovesForMultipleStones) {
+    Board b(3);
+    b.set(0, 1, BLACK);
+    b.set(1, 1, BLACK);
+    b.set(2, 0, BLACK);
+    b.set(0, 0, WHITE);
+    ASSERT_TRUE(b.isSuicideMove(1, 0, WHITE));
+    ASSERT_FALSE(b.isSuicideMove(1, 0, BLACK));
+}
+
+TEST(BoardTest, CanDetectSuicideMovesWhenWillCaptureOpponent) {
+    Board b(3);
+    b.set(0, 1, WHITE);
+    b.set(1, 0, WHITE);
+    b.set(1, 1, BLACK);
+    b.set(0, 2, BLACK);
+    ASSERT_FALSE(b.isSuicideMove(0, 0, BLACK));
+    ASSERT_FALSE(b.isSuicideMove(0, 0, WHITE));
+}
+
 TEST(BoardTest, CanModifyAndReadBoardState) {
     Board b(9);
     ASSERT_TRUE(b.empty(0, 0));
