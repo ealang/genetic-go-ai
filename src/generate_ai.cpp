@@ -1,7 +1,9 @@
+#include <cassert>
 #include "aimatch.h"
 #include "generate_ai.h"
 #include "gpnode.h"
 #include "gptree.h"
+#include "task_queue.h"
 
 using namespace std;
 
@@ -20,20 +22,31 @@ vector<const GPNode*> createInitialPopulation(const TrainingOptions& options) {
 }
 
 GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& options, std::function<void(const TrainingData&)> logger) {
-    auto pop = createInitialPopulation(options);
+    struct Result {
+        int ai, aiScore, benchmarkScore;
+    };
 
+    TaskQueue<Result> queue;
+    auto pop = createInitialPopulation(options);
     for (int generation = 0; generation < options.numGenerations; generation++) {
         unordered_map<int, int> scores;
         for (int ai = 0; ai < options.populationSize; ai++) {
-            int benchmarkScore = 0, aiScore = 0;
-            for (int game = 0; game < options.gamesPerEvaluation; game++) {
-                auto result = playAIMatch(*options.benchmarkAI, *pop[ai], boardSize, maxTurnsPerGame);
-                benchmarkScore += result.blackScore;
-                aiScore += result.whiteScore;
-            }
-            scores.insert(pair<int, int>(ai, aiScore));
-            logger(TrainingData{generation, ai, pop[ai], aiScore, benchmarkScore});
+            queue.submit([ai, boardSize, maxTurnsPerGame, &pop, &options](){
+                int benchmarkScore = 0, aiScore = 0;
+                for (int game = 0; game < options.gamesPerEvaluation; game++) {
+                    auto result = playAIMatch(*options.benchmarkAI, *pop[ai], boardSize, maxTurnsPerGame);
+                    benchmarkScore += result.blackScore;
+                    aiScore += result.whiteScore;
+                }
+                return Result{ai, aiScore, benchmarkScore};
+            });
         }
+        queue.forEach([&pop, &scores, generation, &logger](Result result) {
+            scores.insert(pair<int, int>(result.ai, result.aiScore));
+            logger(TrainingData{generation, result.ai, pop[result.ai], result.aiScore, result.benchmarkScore});
+        });
+        assert(scores.size() == pop.size());
+
         vector<const GPNode*> nextGen = options.evolveNextGeneration(pop, scores);
         cleanupPopulation(pop);
         pop = nextGen;

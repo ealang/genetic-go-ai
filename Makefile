@@ -1,6 +1,7 @@
 SHELL := /bin/bash
 
-TEST_LIBS = -lgtest -lpthread -lgtest_main
+MAIN_LIBS = -lpthread -pthread
+TEST_LIBS = -lgtest -lgtest_main $(MAIN_LIBS)
 
 MAIN_SRC = $(wildcard src/*.cpp)
 TEST_SRC = $(wildcard test/*.cpp)
@@ -26,11 +27,11 @@ testexe: $(TEST_OBJS)
 	@g++ -o $@ $^ $(TEST_LIBS)  
 
 mainexe: $(MAIN_OBJS)
-	@g++ -o $@ $^
+	@g++ -o $@ $^ $(MAIN_LIBS)
 
 obj/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	@g++ -g -Wall -Wextra -Werror -c -std=c++1y -I src -o $@ $^
+	@g++ -g -Wall -Wextra -Werror -Wfatal-errors -c -std=c++1y -I src -o $@ $^
 
 .PHONY: clean
 clean:
