@@ -21,6 +21,12 @@ TEST(Bitset2DTest, CanSetBitsOnOrOff) {
     ASSERT_FALSE(b.get(0, 0));
 }
 
+TEST(Bitset2DTest, CanSetBitsWithShortcutSet) {
+    Bitset2D b(1, 1);
+    b.set(0, 0);
+    ASSERT_TRUE(b.get(0, 0));
+}
+
 TEST(Bitset2DTest, CanSetWithoutAffectingOtherBits) {
     int width = 11, height = 5;
     Bitset2D b(width, height);

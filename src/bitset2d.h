@@ -10,7 +10,7 @@ public:
     Bitset2D(int width, int height);
     virtual ~Bitset2D();
     bool get(int x, int y) const;
-    void set(int x, int y, bool v);
+    void set(int x, int y, bool v=true);
 };
 
 #endif
