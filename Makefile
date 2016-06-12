@@ -17,11 +17,11 @@ run_test: testexe
 
 .PHONY: run_main
 run_main: mainexe
-	@./mainexe --play
+	@./mainexe --play | tee log
 
 .PHONY: run_graph
 run_graph: mainexe
-	./mainexe | tee >(python graph_progress.py)
+	@./mainexe | tee log >(python graph_progress.py)
 
 testexe: $(TEST_OBJS)
 	@g++ -o $@ $^ $(TEST_LIBS)  

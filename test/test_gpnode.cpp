@@ -8,18 +8,18 @@
 using namespace std;
 
 class MyOperatorNode: public GPOperatorNode {
-    int getUnscaled(const Board&) const override { return 1; }
+    int getImpl(const Board&) const override { return 1; }
+    GPNode* cloneImpl() const { return nullptr; };
 public:
     MyOperatorNode(GPNode* a, GPNode* b)
         : GPOperatorNode(a, b) { }
-    GPNode* clone() const { return nullptr; };
 };
 
 class MyTerminalNode: public GPTerminalNode {
-    int getUnscaled(const Board& ) const override { return 1; }
+    int getImpl(const Board& ) const override { return 1; }
+    GPNode* cloneImpl() const { return new MyTerminalNode(); };
 public:
     MyTerminalNode() {}
-    GPNode* clone() const { return nullptr; };
 };
 
 TEST(GPNodeTest, OperatorNodeReturnsChildren) {
@@ -42,4 +42,14 @@ TEST(GPNodeTest, NodeValueHasAdjustableScale) {
     ASSERT_EQ(-2, node.get(b));
     node.setScale(0);
     ASSERT_EQ(0, node.get(b));
+}
+
+TEST(GPNodeTest, ScaleIsCarriedToClonedNode) {
+    Board b(9);
+    MyTerminalNode node;
+    node.setScale(-2);
+    GPNode* clone = node.clone();
+    ASSERT_EQ(-2, node.get(b));
+    ASSERT_EQ(-2, clone->get(b));
+    cleanupTree(clone);
 }

@@ -10,17 +10,26 @@ GPNode::GPNode(): scale(1) { }
 GPNode::~GPNode() { }
 
 int GPNode::get(const Board& context) const {
-    return getUnscaled(context) * scale;
+    return getImpl(context) * scale;
 }
 
 void GPNode::setScale(int val) {
     scale = val;
 }
 
+GPNode* GPNode::clone() const {
+    GPNode* copy = cloneImpl();
+    copy->setScale(scale);
+    return copy;
+}
+
 /* Operator Node */
 
 GPOperatorNode::GPOperatorNode(GPNode* a, GPNode* b)
     : nodes(vector<GPNode*>{a, b}) { }
+
+GPOperatorNode::GPOperatorNode(GPNode* a, GPNode* b, GPNode* c, GPNode* d)
+    : nodes(vector<GPNode*>{a, b, c, d}) { }
 
 std::vector<GPNode*> GPOperatorNode::children() const {
     return nodes;

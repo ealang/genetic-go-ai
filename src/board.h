@@ -22,8 +22,9 @@ public:
 
     std::string toString() const;
 
-    void iterateConnectedStones(int x, int y, const std::function<bool(int, int)>&) const;
+    void iterateConnectedStones(int x, int y, bool includeDiag, const std::function<bool(int, int)>&) const;
     void iterateAdjacentCells(int x, int y, const std::function<void(int, int)>&) const;
+    void iterateAdjacentDiagCells(int x, int y, const std::function<void(int, int)>&) const;
     void iterateBoard(const std::function<bool(int, int)>&) const;
 private:
     class BoardStorage {

@@ -11,10 +11,18 @@ using namespace std;
 struct Direction {
     const int x, y;
 };
-static const Direction DIRECTIONS[] = {Direction{-1, 0},
-                                       Direction{1, 0},
-                                       Direction{0, -1},
-                                       Direction{0, 1}};
+static const Direction ADJ_DIRECTIONS[] = {Direction{-1, 0},
+                                           Direction{1, 0},
+                                           Direction{0, -1},
+                                           Direction{0, 1}};
+static const Direction ADJ_DIAG_DIRECTIONS[] = {Direction{-1, 0},
+                                                Direction{1, 0},
+                                                Direction{0, -1},
+                                                Direction{0, 1},
+                                                Direction{-1, -1},
+                                                Direction{1, 1},
+                                                Direction{-1, 1},
+                                                Direction{1, -1}};
 
 Board::Board(int size): size(size), board(BoardStorage(size)),
     blackCaptures(0),
@@ -107,7 +115,7 @@ void Board::removeCapturedStones(int x, int y, int& blackRemoved, int& whiteRemo
         Color color = get(x, y);
         if (color != NONE && !visited.get(x, y)) {
             bool isSurrounded = true;
-            iterateConnectedStones(x, y, [&](int x, int y) {
+            iterateConnectedStones(x, y, false, [&](int x, int y) {
                 visited.set(x, y, true);
                 iterateAdjacentCells(x, y, [&](int xx, int yy) {
                     if (get(xx, yy) == NONE) {
@@ -118,7 +126,7 @@ void Board::removeCapturedStones(int x, int y, int& blackRemoved, int& whiteRemo
             });
 
             if (isSurrounded) {
-                iterateConnectedStones(x, y, [&](int x, int y) {
+                iterateConnectedStones(x, y, false, [&](int x, int y) {
                     if (color == BLACK)
                         ++blackRemoved;
                     else 
@@ -140,7 +148,7 @@ int Board::countTerritoryFor(Color myColor) const {
         int count = 0;
         bool touchMyTerritory = false, touchEnemyTerritory = false;
 
-        iterateConnectedStones(x, y, [&](int x, int y) {
+        iterateConnectedStones(x, y, false, [&](int x, int y) {
             visited.set(x, y, true);
             ++count;
             iterateAdjacentCells(x, y, [&](int x, int y) {
@@ -172,7 +180,7 @@ int Board::countTerritoryFor(Color myColor) const {
     return territoryCount;
 }
 
-void Board::iterateConnectedStones(int x, int y, const std::function<bool(int, int)>& callback) const {
+void Board::iterateConnectedStones(int x, int y, bool includeDiag, const std::function<bool(int, int)>& callback) const {
     Bitset2D visited(size, size);
     Color color = get(x, y);
     function<void(int, int)> r = [&](int x, int y) {
@@ -180,17 +188,33 @@ void Board::iterateConnectedStones(int x, int y, const std::function<bool(int, i
         if (!callback(x, y)) {
             return;
         }
-        iterateAdjacentCells(x, y, [&](int x, int y) {
+
+        auto countfunc = [&](int x, int y) {
             if (get(x, y) == color && !visited.get(x, y)) {
                 r(x, y);
             }
-        });
+        };
+        if (includeDiag) {
+            iterateAdjacentDiagCells(x, y, countfunc);
+        } else {
+            iterateAdjacentCells(x, y, countfunc);
+        }
     };
     r(x, y);
 }
 
 void Board::iterateAdjacentCells(int x, int y, const std::function<void(int, int)>& callback) const {
-    for (auto dir: DIRECTIONS) {
+    for (auto dir: ADJ_DIRECTIONS) {
+        int xx = x + dir.x,
+            yy = y + dir.y;
+        if (xx >= 0 && yy >= 0 && xx < size && yy < size) {
+            callback(xx, yy);
+        }
+    }
+}
+
+void Board::iterateAdjacentDiagCells(int x, int y, const std::function<void(int, int)>& callback) const {
+    for (auto dir: ADJ_DIAG_DIRECTIONS) {
         int xx = x + dir.x,
             yy = y + dir.y;
         if (xx >= 0 && yy >= 0 && xx < size && yy < size) {
