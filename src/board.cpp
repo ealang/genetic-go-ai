@@ -1,30 +1,16 @@
+#include <stdexcept>
 #include <cstring>
 #include <functional>
 #include <sstream>
-#include <stack>
 #include "color.h"
 #include "bitset2d.h"
 #include "board.h"
+#include "board_iter.h"
 
 using namespace std;
 
-struct Direction {
-    const int x, y;
-};
-static const Direction ADJ_DIRECTIONS[] = {Direction{-1, 0},
-                                           Direction{1, 0},
-                                           Direction{0, -1},
-                                           Direction{0, 1}};
-static const Direction ADJ_DIAG_DIRECTIONS[] = {Direction{-1, 0},
-                                                Direction{1, 0},
-                                                Direction{0, -1},
-                                                Direction{0, 1},
-                                                Direction{-1, -1},
-                                                Direction{1, 1},
-                                                Direction{-1, 1},
-                                                Direction{1, -1}};
-
 Board::Board(int size): size(size), board(BoardStorage(size)),
+    lastMove({false, 0, 0, NONE, Bitset2D(size, size)}),
     blackCaptures(0),
     whiteCaptures(0) {
 }
@@ -52,8 +38,12 @@ int Board::score(Color c) const {
 bool Board::isSuicideMove(int x, int y, Color forColor) const {
     Color enemyColor = otherColor(forColor);
     Board possible = *this;
-    possible.set(x, y, forColor);
-    return captureCount(enemyColor) < possible.captureCount(enemyColor);
+    try {
+        possible.set(x, y, forColor);
+        return captureCount(enemyColor) < possible.captureCount(enemyColor);
+    } catch (const KoRuleViolated&) {
+        return false;
+    }
 }
 
 string Board::toString() const {
@@ -76,49 +66,59 @@ void Board::set(int x, int y, Color color) {
     if (isOutOfBounds(x, y)) {
         throw runtime_error("Cell is out of bounds");
     } else if (!empty(x, y) && color != NONE) {
-        throw runtime_error("Cell already occupied");
+        throw runtime_error("Cell is already occupied");
     } else {
-        board.set(x, y, color);
-        int blackRemoved, whiteRemoved;
-        removeCapturedStones(x, y, blackRemoved, whiteRemoved);
-        blackCaptures += whiteRemoved;
-        whiteCaptures += blackRemoved;
+        Bitset2D captureMask = calculateCaptureMask(x, y, color);
+        MoveInfo thisMove = {true, x, y, color, captureMask};
+        if (!moveViolatesKoRule(lastMove, thisMove)) {
+            board.set(x, y, color);
+            int blackRemoved = (board.blackMask() & captureMask).count(),
+                whiteRemoved = (board.whiteMask() & captureMask).count();
+            blackCaptures += whiteRemoved;
+            whiteCaptures += blackRemoved;
+            board.clearCells(captureMask);
+            lastMove = thisMove;
+        } else {
+            throw KoRuleViolated();
+        }
     }
+}
+
+bool Board::moveViolatesKoRule(const MoveInfo& lastMove, const MoveInfo& thisMove) const {
+    return lastMove.valid &&
+           thisMove.capture.get(lastMove.x, lastMove.y) &&
+           lastMove.capture.get(thisMove.x, thisMove.y) &&
+           lastMove.color != thisMove.color &&
+           lastMove.capture.count() == 1 &&
+           thisMove.capture.count() == 1;
 }
 
 bool Board::isOutOfBounds(int x, int y) const {
     return x < 0 || y < 0 || x >= size || y >= size;
 }
 
-Board::BoardStorage::BoardStorage(int size): size(size) { }
-
-Color Board::BoardStorage::get(int x, int y) const {
-    int i = x + y * size;
-    auto it = cells.find(i);
-    if (it != cells.end()) {
-        return it->second;
-    } else {
-        return NONE;
-    }
-}
-
-void Board::BoardStorage::set(int x, int y, Color color) {
-    cells[x + y * size] = color;
-}
-
-void Board::removeCapturedStones(int x, int y, int& blackRemoved, int& whiteRemoved) {
-    blackRemoved = 0;
-    whiteRemoved = 0;
+Bitset2D Board::calculateCaptureMask(int moveX, int moveY, Color moveColor) const {
     Bitset2D visited(size, size);
+    Bitset2D captureMask(size, size);
+
+    auto getColorWithNewMove = [&](int x, int y) {
+        if (x == moveX && y == moveY) {
+            return moveColor;
+        } else if (captureMask.get(x, y)) {
+            return NONE; // stone will have been removed
+        } else {
+            return get(x, y);
+        }
+    };
 
     auto processCapturesAt = [&](int x, int y) {
-        Color color = get(x, y);
+        Color color = getColorWithNewMove(x, y);
         if (color != NONE && !visited.get(x, y)) {
             bool isSurrounded = true;
-            iterateConnectedStones(x, y, false, [&](int x, int y) {
-                visited.set(x, y, true);
-                iterateAdjacentCells(x, y, [&](int xx, int yy) {
-                    if (get(xx, yy) == NONE) {
+            iterateConnectedStonesWithExtraStoneAt(*this, x, y, moveX, moveY, moveColor, false, [&](int x, int y) {
+                visited.set(x, y);
+                iterateAdjacentCells(*this, x, y, [&](int x, int y) {
+                    if (getColorWithNewMove(x, y) == NONE) {
                         isSurrounded = false;
                     }
                 });
@@ -126,20 +126,17 @@ void Board::removeCapturedStones(int x, int y, int& blackRemoved, int& whiteRemo
             });
 
             if (isSurrounded) {
-                iterateConnectedStones(x, y, false, [&](int x, int y) {
-                    if (color == BLACK)
-                        ++blackRemoved;
-                    else 
-                        ++whiteRemoved;
-                    set(x, y, NONE);
+                iterateConnectedStonesWithExtraStoneAt(*this, x, y, moveX, moveY, moveColor, false, [&](int x, int y) {
+                    captureMask.set(x, y);
                     return true;
                 });
             }
         }
     };
 
-    iterateAdjacentCells(x, y, processCapturesAt);
-    processCapturesAt(x, y);
+    iterateAdjacentCells(*this, moveX, moveY, processCapturesAt);
+    processCapturesAt(moveX, moveY);
+    return captureMask;
 }
 
 int Board::countTerritoryFor(Color myColor) const {
@@ -148,10 +145,10 @@ int Board::countTerritoryFor(Color myColor) const {
         int count = 0;
         bool touchMyTerritory = false, touchEnemyTerritory = false;
 
-        iterateConnectedStones(x, y, false, [&](int x, int y) {
+        iterateConnectedStones(*this, x, y, false, [&](int x, int y) {
             visited.set(x, y, true);
             ++count;
-            iterateAdjacentCells(x, y, [&](int x, int y) {
+            iterateAdjacentCells(*this, x, y, [&](int x, int y) {
                 Color c = get(x, y);
                 if (c == myColor) {
                     touchMyTerritory = true;
@@ -170,7 +167,7 @@ int Board::countTerritoryFor(Color myColor) const {
     };
 
     int territoryCount = 0;
-    iterateBoard([&](int x, int y) {
+    iterateBoard(*this, [&](int x, int y) {
         if (!visited.get(x, y) && empty(x, y)) {
             territoryCount += explorePoint(x, y);
         }
@@ -180,55 +177,36 @@ int Board::countTerritoryFor(Color myColor) const {
     return territoryCount;
 }
 
-void Board::iterateConnectedStones(int x, int y, bool includeDiag, const std::function<bool(int, int)>& callback) const {
-    Bitset2D visited(size, size);
-    Color color = get(x, y);
-    function<void(int, int)> r = [&](int x, int y) {
-        visited.set(x, y, true);
-        if (!callback(x, y)) {
-            return;
-        }
-
-        auto countfunc = [&](int x, int y) {
-            if (get(x, y) == color && !visited.get(x, y)) {
-                r(x, y);
-            }
-        };
-        if (includeDiag) {
-            iterateAdjacentDiagCells(x, y, countfunc);
-        } else {
-            iterateAdjacentCells(x, y, countfunc);
-        }
-    };
-    r(x, y);
+Board::BoardStorage::BoardStorage(int size): 
+    size(size),
+    black(Bitset2D(size, size)),
+    white(Bitset2D(size, size)) { 
 }
 
-void Board::iterateAdjacentCells(int x, int y, const std::function<void(int, int)>& callback) const {
-    for (auto dir: ADJ_DIRECTIONS) {
-        int xx = x + dir.x,
-            yy = y + dir.y;
-        if (xx >= 0 && yy >= 0 && xx < size && yy < size) {
-            callback(xx, yy);
-        }
+Color Board::BoardStorage::get(int x, int y) const {
+    if (black.get(x, y)) {
+        return BLACK;
+    } else if (white.get(x, y)) {
+        return WHITE;
+    } else {
+        return NONE;
     }
 }
 
-void Board::iterateAdjacentDiagCells(int x, int y, const std::function<void(int, int)>& callback) const {
-    for (auto dir: ADJ_DIAG_DIRECTIONS) {
-        int xx = x + dir.x,
-            yy = y + dir.y;
-        if (xx >= 0 && yy >= 0 && xx < size && yy < size) {
-            callback(xx, yy);
-        }
-    }
+void Board::BoardStorage::set(int x, int y, Color color) {
+    black.set(x, y, color == BLACK);
+    white.set(x, y, color == WHITE);
 }
 
-void Board::iterateBoard(const std::function<bool(int, int)>& callback) const {
-    for (int x = 0; x < size; x++) {
-        for (int y = 0; y < size; y++) {
-            if (!callback(x, y)) {
-                return;
-            }
-        }
-    }
+void Board::BoardStorage::clearCells(const Bitset2D& mask) {
+    black &= ~mask;
+    white &= ~mask;
+}
+
+const Bitset2D& Board::BoardStorage::blackMask() const {
+    return black;
+}
+
+const Bitset2D& Board::BoardStorage::whiteMask() const {
+    return white;
 }

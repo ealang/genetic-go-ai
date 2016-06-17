@@ -17,12 +17,15 @@ Move getBestMove(const Board& board, const GPNode& aiLogic, Color color) {
         for (int y = 0; y < board.size; y++) {
             if (board.empty(x, y) && !board.isSuicideMove(x, y, color)) {
                 auto newboard = board;
-                newboard.set(x, y, color);
-                int score = aiLogic.get(newboard);
-                if (score >= bestscore || !moved) {
-                    bestmove = Move{x, y};
-                    bestscore = score;
-                    moved = true;
+                try {
+                    newboard.set(x, y, color);
+                    int score = aiLogic.get(newboard);
+                    if (score >= bestscore || !moved) {
+                        bestmove = Move{x, y};
+                        bestscore = score;
+                        moved = true;
+                    }
+                } catch (const KoRuleViolated&) {
                 }
             }
         }

@@ -2,9 +2,11 @@
 #define BOARD_H
 
 #include <string>
-#include <unordered_map>
-#include <functional>
 #include "color.h"
+#include "bitset2d.h"
+
+// thrown if invalid move made due to KO rule
+struct KoRuleViolated { };
 
 class Board {
 public:
@@ -22,25 +24,34 @@ public:
 
     std::string toString() const;
 
-    void iterateConnectedStones(int x, int y, bool includeDiag, const std::function<bool(int, int)>&) const;
-    void iterateAdjacentCells(int x, int y, const std::function<void(int, int)>&) const;
-    void iterateAdjacentDiagCells(int x, int y, const std::function<void(int, int)>&) const;
-    void iterateBoard(const std::function<bool(int, int)>&) const;
 private:
     class BoardStorage {
         int size;
-        std::unordered_map<int, Color> cells;
+        Bitset2D black, white;
     public:
-        BoardStorage(int);
+        BoardStorage(int size);
         Color get(int x, int y) const;
+        const Bitset2D& blackMask() const;
+        const Bitset2D& whiteMask() const;
+
         void set(int x, int y, Color color);
+        void clearCells(const Bitset2D& mask);
     };
     BoardStorage board;
 
+    struct MoveInfo {
+        bool valid;
+        int x, y;
+        Color color;
+        Bitset2D capture;
+    };
+    MoveInfo lastMove;
+
     int blackCaptures, whiteCaptures;
     bool isOutOfBounds(int x, int y) const;
-    void removeCapturedStones(int x, int y, int& blackRemoved, int& whiteRemoved);
+    Bitset2D calculateCaptureMask(int x, int y, Color color) const;
     int countTerritoryFor(Color color) const;
+    bool moveViolatesKoRule(const MoveInfo& lastMove, const MoveInfo& thisMove) const;
 };
 
 #endif

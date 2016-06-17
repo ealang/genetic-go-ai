@@ -4,6 +4,7 @@
 #include "gpnodes_experimental.h"
 #include "bitset2d.h"
 #include "board.h"
+#include "board_iter.h"
 
 using namespace std;
 
@@ -132,10 +133,10 @@ ChainLengthNode::ChainLengthNode(Color color): color(color) { }
 int ChainLengthNode::getImpl(const Board& b) const {
     int len = 0;
     Bitset2D visited(b.size, b.size);
-    b.iterateBoard([&](int x, int y) {
+    iterateBoard(b, [&](int x, int y) {
         if (b.get(x, y) == color && !visited.get(x, y)) {
             int count = 0;
-            b.iterateConnectedStones(x, y, false, [&](int x, int y) {
+            iterateConnectedStones(b, x, y, false, [&](int x, int y) {
                 visited.set(x, y, true);
                 ++count;
                 return true;
@@ -202,9 +203,9 @@ LibertiesNode::LibertiesNode(Color color): color(color) { }
 int LibertiesNode::getImpl(const Board& board) const {
     Bitset2D visited(board.size, board.size);
     int liberties = 0;
-    board.iterateBoard([&](int x, int y) {
+    iterateBoard(board, [&](int x, int y) {
         if (board.get(x, y) == color) {
-            board.iterateAdjacentCells(x, y, [&](int x, int y) {
+            iterateAdjacentCells(board, x, y, [&](int x, int y) {
                 if (board.get(x, y) == NONE && !visited.get(x, y)) {
                     visited.set(x, y);
                     ++liberties;
@@ -233,10 +234,10 @@ ClustersNode::ClustersNode(Color color, bool inclDiag): color(color), inclDiag(i
 int ClustersNode::getImpl(const Board& board) const {
     Bitset2D visited(board.size, board.size);
     int clusters = 0;
-    board.iterateBoard([&](int x, int y) {
+    iterateBoard(board, [&](int x, int y) {
         if (board.get(x, y) == color && !visited.get(x, y)) {
             ++clusters;
-            board.iterateConnectedStones(x, y, inclDiag, [&](int x, int y) {
+            iterateConnectedStones(board, x, y, inclDiag, [&](int x, int y) {
                 visited.set(x, y);
                 return true;
             });

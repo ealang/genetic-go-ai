@@ -1,7 +1,10 @@
 #include <stdexcept>
+#include <vector>
 #include "gtest/gtest.h"
 #include "board.h"
 #include "color.h"
+
+using namespace std;
 
 TEST(BoardTest, CanCreateBoard) {
     Board b(9);
@@ -17,9 +20,9 @@ TEST(BoardTest, CanGenerateAStringRepresentation) {
 
 TEST(BoardTest, ThrowsWhenPlaceStoneOutOfBounds) {
     Board b(2);
-    ASSERT_THROW(b.set(-1, 0, BLACK), std::runtime_error);
-    ASSERT_THROW(b.set(0, 2, BLACK), std::runtime_error);
-    ASSERT_THROW(b.set(2, 2, BLACK), std::runtime_error);
+    ASSERT_THROW(b.set(-1, 0, BLACK), runtime_error);
+    ASSERT_THROW(b.set(0, 2, BLACK), runtime_error);
+    ASSERT_THROW(b.set(2, 2, BLACK), runtime_error);
 }
 
 TEST(BoardTest, CanDetectSuicideMovesForSingleStone) {
@@ -108,7 +111,18 @@ TEST(BoardTest, CalculatesSingleCellPlayerTerritory) {
 TEST(BoardTest, ThrowsExceptionWhenMakingInvalidMove) {
     Board b(9);
     b.set(0, 0, BLACK);
-    ASSERT_THROW(b.set(0, 0, BLACK), std::runtime_error);
+    ASSERT_THROW(b.set(0, 0, BLACK), runtime_error);
+}
+
+TEST(BoardTest, CanCaptureOwnPiece) {
+    Board b(2);
+    b.set(0, 1, BLACK);
+    b.set(1, 0, BLACK);
+    b.set(0, 0, WHITE);
+
+    ASSERT_EQ(NONE, b.get(0, 0));
+    ASSERT_EQ(1, b.captureCount(BLACK));
+    ASSERT_EQ(0, b.captureCount(WHITE));
 }
 
 TEST(BoardTest, CapturesSingleOpponentPiece) {
@@ -170,4 +184,57 @@ TEST(BoardTest, CalculatesPlayerScoreAsTerritoryPlusCaptures) {
     ASSERT_EQ(1, b.territoryCount(WHITE));
     ASSERT_EQ(2, b.score(WHITE));
     ASSERT_EQ(0, b.score(BLACK));
+}
+
+TEST(BoardTest, RuleOfKoPreventsImmediateRecapture) {
+    Board b(4);
+    b.set(0, 1, BLACK);
+    b.set(1, 0, BLACK);
+    b.set(1, 2, BLACK);
+    b.set(2, 1, BLACK);
+    b.set(2, 0, WHITE);
+    b.set(2, 2, WHITE);
+    b.set(3, 1, WHITE);
+
+    // white captures
+    b.set(1, 1, WHITE);
+    ASSERT_EQ(1, b.captureCount(WHITE));
+    ASSERT_EQ(NONE, b.get(2, 1));
+    ASSERT_EQ(WHITE, b.get(1, 1));
+
+    // black cannot recapture
+    ASSERT_THROW(b.set(2, 1, BLACK), KoRuleViolated);
+    ASSERT_EQ(0, b.captureCount(BLACK));
+    ASSERT_EQ(NONE, b.get(2, 1));
+    ASSERT_EQ(WHITE, b.get(1, 1));
+
+    // black captures after another move
+    b.set(3, 3, BLACK);
+    b.set(2, 1, BLACK);
+    ASSERT_EQ(1, b.captureCount(BLACK));
+    ASSERT_EQ(BLACK, b.get(2, 1));
+    ASSERT_EQ(NONE, b.get(1, 1));
+
+    // white cannot recapture
+    ASSERT_THROW(b.set(1, 1, WHITE), KoRuleViolated);
+}
+
+TEST(BoardTest, RuleOfKoAppliesToSingleStoneCaptureOnly) {
+    Board b(4);
+    b.set(0, 1, WHITE);
+    b.set(1, 0, WHITE);
+    b.set(2, 0, WHITE);
+    b.set(1, 1, BLACK);
+    b.set(2, 1, BLACK);
+    b.set(3, 0, BLACK);
+
+    b.set(0, 0, BLACK);
+
+    ASSERT_EQ(0, b.captureCount(WHITE));
+    ASSERT_EQ(2, b.captureCount(BLACK));
+
+    b.set(1, 0, WHITE);
+
+    ASSERT_EQ(1, b.captureCount(WHITE));
+    ASSERT_EQ(2, b.captureCount(BLACK));
 }

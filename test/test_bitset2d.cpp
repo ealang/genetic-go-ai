@@ -12,6 +12,15 @@ TEST(Bitset2DTest, IsInitializedToFalse) {
     }
 }
 
+TEST(Bitset2DTest, CanConstructFromCopy) {
+    int width = 2, height = 1;
+    Bitset2D a(width, height);
+    a.set(0, 0);
+    Bitset2D b(a);
+    ASSERT_TRUE(b.get(0, 0));
+    ASSERT_EQ(1, b.count());
+}
+
 TEST(Bitset2DTest, CanSetBitsOnOrOff) {
     Bitset2D b(1, 1);
     ASSERT_FALSE(b.get(0, 0));
@@ -19,6 +28,64 @@ TEST(Bitset2DTest, CanSetBitsOnOrOff) {
     ASSERT_TRUE(b.get(0, 0));
     b.set(0, 0, false);
     ASSERT_FALSE(b.get(0, 0));
+}
+
+TEST(Bitset2DTest, CanCountSetBits) {
+    int width = 2, height = 2;
+    Bitset2D a(width, height);
+    ASSERT_EQ(0, a.count());
+    a.set(0, 0, true);
+    ASSERT_EQ(1, a.count());
+    a.set(1, 0, true);
+    ASSERT_EQ(2, a.count());
+    a.set(1, 0, true);
+    ASSERT_EQ(2, a.count());
+    a.set(1, 0, false);
+    ASSERT_EQ(1, a.count());
+}
+
+TEST(Bitset2D, CanInvertBits) {
+    int width = 3, height = 1;
+    Bitset2D a(width, height);
+    a.set(1, 0, true);
+    Bitset2D b = ~a;
+    ASSERT_TRUE(b.get(0, 0));
+    ASSERT_FALSE(b.get(1, 0));
+    ASSERT_EQ(2, b.count());
+}
+
+TEST(Bitset2D, CanAndToCreateCopy) {
+    int width = 4, height = 1;
+    Bitset2D a(width, height);
+    Bitset2D b(width, height);
+    a.set(2, 0, true);
+    a.set(3, 0, true);
+    b.set(1, 0, true);
+    b.set(3, 0, true);
+
+    Bitset2D c = b & a;
+    ASSERT_FALSE(c.get(0, 0));
+    ASSERT_FALSE(c.get(1, 0));
+    ASSERT_FALSE(c.get(2, 0));
+    ASSERT_TRUE(c.get(3, 0));
+    ASSERT_EQ(1, c.count());
+}
+
+TEST(Bitset2D, CanAndWithOtherBitset) {
+    int width = 4, height = 1;
+    Bitset2D a(width, height);
+    Bitset2D b(width, height);
+    a.set(2, 0, true);
+    a.set(3, 0, true);
+    b.set(1, 0, true);
+    b.set(3, 0, true);
+
+    b &= a;
+    ASSERT_FALSE(b.get(0, 0));
+    ASSERT_FALSE(b.get(1, 0));
+    ASSERT_FALSE(b.get(2, 0));
+    ASSERT_TRUE(b.get(3, 0));
+    ASSERT_EQ(1, b.count());
 }
 
 TEST(Bitset2DTest, CanSetBitsWithShortcutSet) {
