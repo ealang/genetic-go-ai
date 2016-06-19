@@ -32,9 +32,12 @@ void playInteractiveVsAI(int boardSize, const GPNode* ai) {
             }
             try {
                 b.set(x, y, turn);
-            } catch (runtime_error& e) {
+            } catch (const runtime_error& e) {
                 cout << e.what() << endl;
+            } catch (const KoRuleViolated&) {
+                cout << "Move not allowed" << endl;
             }
+
             cout << b.toString();
             turn = turn == BLACK ? WHITE : BLACK;
         }
@@ -55,8 +58,8 @@ GPNode* trainAI(int boardSize) {
     RandomNode benchmarkAI(0, 10000);
 
     TrainingOptions options;
-    options.populationSize = 40;
-    options.numGenerations = 100;
+    options.populationSize = 50;
+    options.numGenerations = 50;
     options.gamesPerEvaluation = 20;
     options.benchmarkAI = &benchmarkAI;
     options.createNewAI = createRandomAI;
