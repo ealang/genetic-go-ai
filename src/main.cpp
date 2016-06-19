@@ -2,13 +2,55 @@
 #include <iostream>
 #include "aimatch.h"
 #include "board.h"
+#include "evolution_algs.h"
 #include "generate_ai.h"
 #include "gpnode.h"
-#include "gptree.h"
-#include "evolution_algs.h"
 #include "gpnodes_experimental.h"
+#include "gptree.h"
+#include "rlutil.h"
 
 using namespace std;
+
+void printFancyBoard(const Board& board) {
+    int size = board.size();
+    auto printBorderCell = [size](int i) {
+        rlutil::setBackgroundColor(rlutil::GREY);
+        rlutil::setColor(rlutil::DARKGREY);
+        if (i >= 1 && i <= size) 
+            cout << i % 10;
+        else
+            cout << " ";
+    };
+    auto printTBBorder = [&]() {
+        for (int i = 0; i < size + 2; i++) {
+            printBorderCell(i);
+        }
+    };
+    auto printStone = [](int x, int y, Color stone) {
+        static int colors[] = {rlutil::BLACK, rlutil::BLACK, rlutil::WHITE};
+        int bgColor = ((y + x) % 2) ? rlutil::BLUE : rlutil::CYAN;
+        rlutil::setBackgroundColor(bgColor);
+        rlutil::setColor(colors[stone]);
+        cout << (stone == NONE ? ' ' : 'o');
+    };
+
+    rlutil::saveDefaultColor();
+
+    printTBBorder();
+    cout << endl;
+    for (int y = 0; y < size; y++) {
+        printBorderCell(y + 1);
+        for (int x = 0; x < size; x++) {
+            printStone(x, y, board.get(x, y));
+        }
+        printBorderCell(y + 1);
+        cout << endl;
+    }
+    printTBBorder();
+    cout << endl;
+
+    rlutil::resetColor();
+}
 
 void playInteractiveVsAI(int boardSize, const GPNode* ai) {
     while (true) {
@@ -38,7 +80,7 @@ void playInteractiveVsAI(int boardSize, const GPNode* ai) {
                 cout << "Move not allowed" << endl;
             }
 
-            cout << b.toString();
+            printFancyBoard(b);
             turn = turn == BLACK ? WHITE : BLACK;
         }
         cout << "ai score: " << b.score(WHITE) << endl <<

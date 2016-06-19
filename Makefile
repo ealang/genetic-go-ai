@@ -30,6 +30,7 @@ mainexe: $(MAIN_OBJS)
 	@g++ -o $@ $^ $(MAIN_LIBS)
 
 obj/%.o: %.cpp
+	@[ -a src/rlutil.h ] || wget --quiet https://raw.githubusercontent.com/tapio/rlutil/ca895e114fa8fe32913fb9e1cb30fc86bbd40c6b/rlutil.h -O src/rlutil.h
 	@mkdir -p $(dir $@)
 	@g++ -g -Wall -Wextra -Werror -Wfatal-errors -c -std=c++1y -I src -o $@ $^
 
@@ -37,6 +38,7 @@ obj/%.o: %.cpp
 clean:
 	@rm -rf obj
 	@rm -f mainexe testexe tags
+	@rm -f src/rlutil.h
 
 .PHONY: ctags
 ctags:
