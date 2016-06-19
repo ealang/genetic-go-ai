@@ -41,7 +41,7 @@ def main():
         pyplot.plot(series.data_x, series.data_y, '.' + color_code)
         pyplot.plot(series.trend_x, series.trend_y, color_code, linewidth=2, label=label)
 
-    color_codes = cycle(['b', 'r', 'g', 'm', 'c', 'k'])
+    color_codes = ['b', 'r', 'g', 'm', 'c', 'k']
     if len(sys.argv) == 1:
         series = Series()
         load_series(series, sys.stdin)
@@ -50,7 +50,7 @@ def main():
     else:
         filenames = sys.argv[1:]
         series_list = [Series() for _ in filenames]
-        for series, filename, color_code in zip(series_list, filenames, color_codes):
+        for series, filename, color_code in zip(series_list, filenames, cycle(color_codes)):
             with open(filename) as fd:
                 load_series(series, fd)
             plot_series(series, color_code, filename)
