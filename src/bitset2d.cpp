@@ -11,21 +11,21 @@ int countBits(uint32_t i) {
 }
 
 int calcSizeBytes(int width, int height) {
-    return (int)ceil(width * height / 8.0);
+    return (int)ceil(width * height / 32.0);
 }
 
 Bitset2D::Bitset2D(int width, int height):
     width(width),
     height(height),
     numSet(0),
-    data(std::vector<char>(calcSizeBytes(width, height)))
+    data(std::vector<uint32_t>(calcSizeBytes(width, height)))
 { }
 
 bool Bitset2D::get(int x, int y) const {
     if (x < 0 || x >= width || y < 0 || y >= height)
         throw std::runtime_error("Read out of bounds");
     int i = x + y * width;
-    return (data[i / 8] & (1 << (i % 8))) != 0;
+    return (data[i / 32] & (1 << (i % 32))) != 0;
 }
 
 int Bitset2D::count() const {
@@ -55,11 +55,11 @@ void Bitset2D::set(int x, int y, bool v) {
     if (x < 0 || x >= width || y < 0 || y >= height)
         throw std::runtime_error("Write out of bounds");
     int i = x + y * width;
-    char oldVal = data[i / 8],
-         mask = 1 << (i % 8),
-         newVal = (oldVal & ~mask) | (v << (i % 8));
+    uint32_t oldVal = data[i / 32],
+             mask = 1 << (i % 32),
+             newVal = (oldVal & ~mask) | (v << (i % 32));
     if (oldVal != newVal) {
-        data[i / 8] = newVal;
+        data[i / 32] = newVal;
         if (v) {
             ++numSet;
         } else {

@@ -26,7 +26,9 @@ TEST(AIMatchTest, DoesntMakeSuicideMoves) {
     board.set(2, 0, BLACK);
     board.set(0, 0, WHITE);
 
-    auto ai = PlayerScoreNode(BLACK); // really wants to give other player points
+    auto ai = PlayerScoreDeltaNode(); 
+    ai.setScale(-1); // really wants to give other player points
+
     auto move = getBestMove(board, ai, WHITE);
     ASSERT_NE((Move{1, 0}), move);
 }

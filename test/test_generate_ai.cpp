@@ -3,6 +3,7 @@
 #include "generate_ai.h"
 #include "gptree.h"
 #include "gpnodes_experimental.h"
+#include "gpnode_context.h"
 
 using namespace std;
 
@@ -31,13 +32,13 @@ TEST(TestGenerateAI, LogsTrainingInformation) {
         ASSERT_EQ(0, data.generationNum);
         ASSERT_EQ(0, data.aiNum);
         loggerCalled = true;
-        data.ai->get(b);
+        data.ai->get(Context{0, 0, WHITE, b, b});
     };
 
     GPNode* ai = generateAI(boardSize, 1, options, logger);
     ASSERT_TRUE(loggerCalled);
 
-    ai->get(b);
+    ai->get(Context{0, 0, WHITE, b, b});
 
     cleanupTree(ai);
 }

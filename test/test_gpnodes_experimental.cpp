@@ -1,30 +1,42 @@
 #include "gtest/gtest.h"
 #include "board.h"
 #include "gptree.h"
+#include "gpnode_context.h"
 #include "gpnodes_experimental.h"
 
 class GPNodesExperimentalTest: public ::testing::Test {
 public:
-    Board board;
-    GPNodesExperimentalTest(): board(Board(5)) {}
+    Board prevBoard, board;
+    Context blackContext, whiteContext;
+    GPNodesExperimentalTest():
+        prevBoard(5),
+        board(5),
+        blackContext{0, 0, BLACK, board, board},
+        whiteContext{0, 0, WHITE, board, board} {
+    }
+    Context set(int x, int y, Color c) {
+        prevBoard = board;
+        board.set(x, y, c);
+        return Context{x, y, c, prevBoard, board};
+    }
 };
 
 TEST_F(GPNodesExperimentalTest, CanAddNumbers) {
     auto n1 = ConstNode(1), n2 = ConstNode(2);
-    ASSERT_EQ(3, PlusNode(&n1, &n2).get(board));
+    ASSERT_EQ(3, PlusNode(&n1, &n2).get(blackContext));
 }
 
 TEST_F(GPNodesExperimentalTest, CanGenerateRandomNumbers) {
     auto node = RandomNode(0, 10);
     for (int i = 0; i < 10000; i++) {
-        int n = node.get(board);
+        int n = node.get(blackContext);
         ASSERT_TRUE(n >= 0 && n <= 10);
     }
 }
 
 TEST_F(GPNodesExperimentalTest, RandomTreeHasCorrectDepth) {
     GPNode* n = createRandomTree(3);
-    n->get(board);
+    n->get(blackContext);
     ASSERT_EQ(3, treeDepth(n));
     cleanupTree(n);
 }
@@ -38,57 +50,52 @@ TEST_F(GPNodesExperimentalTest, CanStringPrintRandomTree) {
 }
 
 TEST_F(GPNodesExperimentalTest, CalculatesNumberOfConnectedStones) {
-    auto black = ChainLengthNode(BLACK),
-         white = ChainLengthNode(WHITE);
-    ASSERT_EQ(0, black.get(board));
-    ASSERT_EQ(0, white.get(board));
-    board.set(0, 0, BLACK);
-    ASSERT_EQ(0, black.get(board));
-    ASSERT_EQ(0, white.get(board));
-    board.set(1, 0, BLACK);
-    ASSERT_EQ(2, black.get(board));
-    ASSERT_EQ(0, white.get(board));
-    board.set(1, 1, BLACK);
-    ASSERT_EQ(3, black.get(board));
-    ASSERT_EQ(0, white.get(board));
+    auto chain = ChainLengthDeltaNode();
 
-    board.set(2, 2, WHITE);
-    board.set(3, 2, WHITE);
-    board.set(4, 2, WHITE);
-    board.set(4, 3, WHITE);
-    ASSERT_EQ(3, black.get(board));
-    ASSERT_EQ(4, white.get(board));
+    ASSERT_EQ(0, chain.get(set(0, 0, BLACK)));
+    ASSERT_EQ(2, chain.get(set(1, 0, BLACK)));
+    ASSERT_EQ(1, chain.get(set(2, 0, BLACK)));
+
+    set(0, 2, WHITE);
+    set(2, 2, WHITE);
+    ASSERT_EQ(3, chain.get(set(1, 2, WHITE)));
 }
 
 TEST_F(GPNodesExperimentalTest, CalulatesNumberOfConnectedStonesAndDoesntWrap) {
-    auto black = ChainLengthNode(BLACK);
+    auto chain = ChainLengthDeltaNode();
     board.set(0, 1, BLACK);
-    board.set(4, 0, BLACK);
-    ASSERT_EQ(0, black.get(board));
+    ASSERT_EQ(0, chain.get(set(4, 0, BLACK)));
 }
 
 TEST_F(GPNodesExperimentalTest, CalculatesNumberOfLiberties) {
+    bool mine = true;
     board.set(0, 0, BLACK);
     board.set(0, 1, BLACK);
-    board.set(1, 0, BLACK);
-    board.set(1, 1, WHITE);
-    board.set(2, 2, WHITE);
-    ASSERT_EQ(2, LibertiesNode(BLACK).get(board));
-    ASSERT_EQ(4, LibertiesNode(WHITE).get(board));
+    {
+        Context context = set(0, 2, BLACK);
+        ASSERT_EQ(1, LibertiesDeltaNode(mine).get(context));
+        ASSERT_EQ(0, LibertiesDeltaNode(!mine).get(context));
+    }
+    board.set(1, 0, WHITE);
+    {
+        Context context = set(1, 1, WHITE);
+        ASSERT_EQ(1, LibertiesDeltaNode(mine).get(context));
+        ASSERT_EQ(1, LibertiesDeltaNode(!mine).get(context));
+    }
 }
 
-TEST_F(GPNodesExperimentalTest, CalculatesNumberOfClustersOfStones) {
-    board.set(0, 0, BLACK);
-    board.set(0, 1, BLACK);
-    board.set(1, 0, BLACK);
-    board.set(2, 1, BLACK);
-    board.set(1, 1, WHITE);
-    board.set(2, 2, WHITE);
-    board.set(4, 4, WHITE);
-    EXPECT_EQ(2, ClustersNode(BLACK, false).get(board));
-    EXPECT_EQ(3, ClustersNode(WHITE, false).get(board));
-    EXPECT_EQ(1, ClustersNode(BLACK, true).get(board));
-    EXPECT_EQ(2, ClustersNode(WHITE, true).get(board));
+TEST_F(GPNodesExperimentalTest, CanDetectChangesInClusterSize) {
+    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(0, 0, BLACK)));
+    EXPECT_EQ(1, MaxClusterDeltaNode().get(set(1, 0, BLACK)));
+    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(3, 0, BLACK)));
+    EXPECT_EQ(2, MaxClusterDeltaNode().get(set(2, 0, BLACK)));
+
+    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(1, 1, WHITE)));
+    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(3, 3, WHITE)));
+    EXPECT_EQ(1, MaxClusterDeltaNode().get(set(4, 3, WHITE)));
+    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(1, 3, WHITE)));
+    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(3, 1, WHITE)));
+    EXPECT_EQ(4, MaxClusterDeltaNode().get(set(2, 2, WHITE)));
 }
 
 TEST_F(GPNodesExperimentalTest, CalculatesLessThan) {
@@ -96,5 +103,64 @@ TEST_F(GPNodesExperimentalTest, CalculatesLessThan) {
     ConstNode c10(10);
     ConstNode c1(1);
     ConstNode c2(2);
-    EXPECT_EQ(5, IfLessThanNode(&c1, &c2, &c5, &c10).get(board));
+    EXPECT_EQ(5, IfLessThanNode(&c1, &c2, &c5, &c10).get(blackContext));
+}
+
+TEST_F(GPNodesExperimentalTest, CalculatesNearbyStones) {
+    board.set(0, 1, BLACK);
+    board.set(0, 2, BLACK);
+    board.set(1, 0, BLACK);
+    board.set(1, 1, WHITE);
+    board.set(2, 2, WHITE);
+
+    bool incladj = true;
+    {
+        bool black = true;
+        Context bcontext{0, 1, BLACK, board, board};
+        EXPECT_EQ(1, AdjacentStonesNode(black, !incladj).get(bcontext));
+        EXPECT_EQ(2, AdjacentStonesNode(black, incladj).get(bcontext));
+        EXPECT_EQ(1, AdjacentStonesNode(!black, !incladj).get(bcontext));
+    }
+
+    {
+        bool white = true;
+        Context wcontext{1, 1, WHITE, board, board};
+        EXPECT_EQ(0, AdjacentStonesNode(white, !incladj).get(wcontext));
+        EXPECT_EQ(1, AdjacentStonesNode(white, incladj).get(wcontext));
+        EXPECT_EQ(3, AdjacentStonesNode(!white, incladj).get(wcontext));
+    }
+}
+
+TEST_F(GPNodesExperimentalTest, DetectsIfCanBeCaptured) {
+    board.set(0, 1, BLACK);
+
+    {
+        Board newBoard = board;
+        newBoard.set(0, 0, WHITE);
+        Context c = Context{0, 0, WHITE, board, newBoard};
+        EXPECT_TRUE(CanBeCapturedNode().get(c));
+    }
+    {
+        Context c = set(1, 1, WHITE);
+        EXPECT_EQ(1, CanBeCapturedNode().get(c));
+    }
+}
+
+TEST_F(GPNodesExperimentalTest, DetectsIfCanCapture) {
+    board.set(0, 0, WHITE);
+    board.set(0, 1, BLACK);
+
+    {
+        Board newBoard = board;
+        newBoard.set(1, 0, BLACK);
+        Context c = Context{1, 0, BLACK, board, newBoard};
+        EXPECT_TRUE(CanCaptureNode().get(c));
+    }
+}
+
+TEST_F(GPNodesExperimentalTest, DetectScoreChanges) {
+    board.set(0, 1, BLACK);
+    board.set(0, 0, WHITE);
+    board.set(4, 4, WHITE);
+    EXPECT_EQ(2, PlayerScoreDeltaNode().get(set(1, 0, BLACK)));
 }

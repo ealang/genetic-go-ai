@@ -10,9 +10,9 @@ struct KoRuleViolated { };
 
 class Board {
 public:
-    Board(int size);
+    Board(int boardSize);
 
-    const int size;
+    int size() const;
     bool empty(int x, int y) const;
     Color get(int x, int y) const;
     void set(int x, int y, Color c);
@@ -25,6 +25,8 @@ public:
     std::string toString() const;
 
 private:
+    int boardSize;
+    int blackCaptures, whiteCaptures;
     class BoardStorage {
         int size;
         Bitset2D black, white;
@@ -47,7 +49,6 @@ private:
     };
     MoveInfo lastMove;
 
-    int blackCaptures, whiteCaptures;
     bool isOutOfBounds(int x, int y) const;
     Bitset2D calculateCaptureMask(int x, int y, Color color) const;
     int countTerritoryFor(Color color) const;

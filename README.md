@@ -2,11 +2,6 @@
 
 Work in progress AI for Go using genetic programming.
 
-# To do
-
-* Some Go rules have not been implemented
-* Implement more functions and sensors for the AI to use
-
 # Instructions
 
 Run tests (Google test framework is required):

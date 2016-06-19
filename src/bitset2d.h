@@ -5,7 +5,7 @@
 
 class Bitset2D {
     int width, height, numSet;
-    std::vector<char> data;
+    std::vector<uint32_t> data;
 public:
     Bitset2D(int width, int height);
 

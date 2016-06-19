@@ -20,8 +20,8 @@ static const Direction ADJ_DIAG_DIRECTIONS[] = {Direction{-1, 0},
                                                 Direction{1, -1}};
 
 void iterateBoard(const Board& board, std::function<bool(int, int)> callback) {
-    for (int x = 0; x < board.size; x++) {
-        for (int y = 0; y < board.size; y++) {
+    for (int x = 0; x < board.size(); x++) {
+        for (int y = 0; y < board.size(); y++) {
             if (!callback(x, y)) {
                 return;
             }
@@ -31,7 +31,7 @@ void iterateBoard(const Board& board, std::function<bool(int, int)> callback) {
 
 void iterateLiberties(const Board& board, int x, int y, std::function<bool(int, int)> callback) {
     if (board.get(x, y) != NONE) {
-        Bitset2D visited(board.size, board.size);
+        Bitset2D visited(board.size(), board.size());
         iterateConnectedStones(board, x, y, false, [&](int x, int y) {
             bool continueIterating = true;
             iterateAdjacentCells(board, x, y, [&](int x, int y) {
@@ -49,7 +49,7 @@ void iterateAdjacentCells(const Board& board, int x, int y, std::function<void(i
     for (auto dir: ADJ_DIRECTIONS) {
         int xx = x + dir.x,
             yy = y + dir.y;
-        if (xx >= 0 && yy >= 0 && xx < board.size && yy < board.size) {
+        if (xx >= 0 && yy >= 0 && xx < board.size() && yy < board.size()) {
             callback(xx, yy);
         }
     }
@@ -59,7 +59,7 @@ void iterateAdjacentDiagCells(const Board& board, int x, int y, std::function<vo
     for (auto dir: ADJ_DIAG_DIRECTIONS) {
         int xx = x + dir.x,
             yy = y + dir.y;
-        if (xx >= 0 && yy >= 0 && xx < board.size && yy < board.size) {
+        if (xx >= 0 && yy >= 0 && xx < board.size() && yy < board.size()) {
             callback(xx, yy);
         }
     }
@@ -70,7 +70,7 @@ void iterateConnectedStones(const Board& board, int x, int y, bool includeDiag, 
 }
 
 void iterateConnectedStonesWithExtraStoneAt(const Board& board, int startX, int startY, int extraX, int extraY, Color extraColor, bool includeDiag, std::function<bool(int, int)> callback) {
-    Bitset2D visited(board.size, board.size);
+    Bitset2D visited(board.size(), board.size());
     auto getWithExtra = [&](int x, int y) {
         if (x == extraX && y == extraY) {
             return extraColor;

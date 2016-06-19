@@ -9,10 +9,16 @@
 
 using namespace std;
 
-Board::Board(int size): size(size), board(BoardStorage(size)),
-    lastMove({false, 0, 0, NONE, Bitset2D(size, size)}),
+Board::Board(int boardSize):
+    boardSize(boardSize),
     blackCaptures(0),
-    whiteCaptures(0) {
+    whiteCaptures(0),
+    board(BoardStorage(boardSize)),
+    lastMove({false, 0, 0, NONE, Bitset2D(boardSize, boardSize)}) {
+}
+
+int Board::size() const {
+    return boardSize;
 }
 
 bool Board::empty(int x, int y) const {
@@ -49,12 +55,12 @@ bool Board::isSuicideMove(int x, int y, Color forColor) const {
 string Board::toString() const {
     stringstream ss;
     char chars[] = {' ', 'B', 'W'};
-    char sep[size * 2 + 2];
-    sep[size * 2 + 1] = 0;
-    memset(sep, '-', size * 2 + 1);
-    for (int y = 0; y < size; y++) {
+    char sep[boardSize * 2 + 2];
+    sep[boardSize * 2 + 1] = 0;
+    memset(sep, '-', boardSize * 2 + 1);
+    for (int y = 0; y < boardSize; y++) {
         ss << '|';
-        for (int x = 0; x < size; x++) {
+        for (int x = 0; x < boardSize; x++) {
             ss << chars[get(x, y)] << '|';
         }
         ss << endl << sep << endl;
@@ -94,12 +100,12 @@ bool Board::moveViolatesKoRule(const MoveInfo& lastMove, const MoveInfo& thisMov
 }
 
 bool Board::isOutOfBounds(int x, int y) const {
-    return x < 0 || y < 0 || x >= size || y >= size;
+    return x < 0 || y < 0 || x >= boardSize || y >= boardSize;
 }
 
 Bitset2D Board::calculateCaptureMask(int moveX, int moveY, Color moveColor) const {
-    Bitset2D visited(size, size);
-    Bitset2D captureMask(size, size);
+    Bitset2D visited(boardSize, boardSize);
+    Bitset2D captureMask(boardSize, boardSize);
 
     auto getColorWithNewMove = [&](int x, int y) {
         if (x == moveX && y == moveY) {
@@ -140,7 +146,7 @@ Bitset2D Board::calculateCaptureMask(int moveX, int moveY, Color moveColor) cons
 }
 
 int Board::countTerritoryFor(Color myColor) const {
-    Bitset2D visited(size, size);
+    Bitset2D visited(boardSize, boardSize);
     auto explorePoint = [&](int x, int y) {
         int count = 0;
         bool touchMyTerritory = false, touchEnemyTerritory = false;

@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <sstream>
 #include "gpnode.h"
 
 using namespace std;
@@ -9,7 +10,7 @@ GPNode::GPNode(): scale(1) { }
 
 GPNode::~GPNode() { }
 
-int GPNode::get(const Board& context) const {
+int GPNode::get(const Context& context) const {
     return getImpl(context) * scale;
 }
 
@@ -41,10 +42,6 @@ GPNode* GPOperatorNode::replaceChild(int num, GPNode* other) {
     return old;
 }
 
-std::string GPOperatorNode::toString() const {
-    return "GPOperatorNode()";
-}
-
 /* Terminal Node */
 
 std::vector<GPNode*> GPTerminalNode::children() const {
@@ -56,6 +53,12 @@ GPNode* GPTerminalNode::replaceChild(int, GPNode*) {
     return nullptr;
 }
 
-std::string GPTerminalNode::toString() const {
-    return string("GPTerminalNode()");
+std::string GPNode::toString() const {
+    if (scale != 1) {
+        std::stringstream ss;
+        ss << scale << "*" << toStringImpl();
+        return ss.str();
+    } else {
+        return toStringImpl();
+    }
 }

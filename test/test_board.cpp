@@ -8,7 +8,7 @@ using namespace std;
 
 TEST(BoardTest, CanCreateBoard) {
     Board b(9);
-    ASSERT_EQ(9, b.size);
+    ASSERT_EQ(9, b.size());
 }
 
 TEST(BoardTest, CanGenerateAStringRepresentation) {

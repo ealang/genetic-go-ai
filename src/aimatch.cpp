@@ -2,6 +2,7 @@
 #include "aimatch.h"
 #include "board.h"
 #include "gpnode.h"
+#include "gpnode_context.h"
 
 Color nextTurn(Color c) { return c == BLACK ? WHITE : BLACK; }
 
@@ -13,13 +14,13 @@ Move getBestMove(const Board& board, const GPNode& aiLogic, Color color) {
     Move bestmove {0, 0};
     bool moved = false;
     int bestscore = 0;
-    for (int x = 0; x < board.size; x++) {
-        for (int y = 0; y < board.size; y++) {
+    for (int x = 0; x < board.size(); x++) {
+        for (int y = 0; y < board.size(); y++) {
             if (board.empty(x, y) && !board.isSuicideMove(x, y, color)) {
                 auto newboard = board;
                 try {
                     newboard.set(x, y, color);
-                    int score = aiLogic.get(newboard);
+                    int score = aiLogic.get(Context{x, y, color, board, newboard});
                     if (score >= bestscore || !moved) {
                         bestmove = Move{x, y};
                         bestscore = score;

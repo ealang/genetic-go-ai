@@ -55,20 +55,23 @@ TEST(Bitset2D, CanInvertBits) {
 }
 
 TEST(Bitset2D, CanAndToCreateCopy) {
-    int width = 4, height = 1;
+    int width = 32, height = 1;
     Bitset2D a(width, height);
     Bitset2D b(width, height);
     a.set(2, 0, true);
     a.set(3, 0, true);
     b.set(1, 0, true);
     b.set(3, 0, true);
+    a.set(31, 0, true);
+    b.set(31, 0, true);
 
     Bitset2D c = b & a;
     ASSERT_FALSE(c.get(0, 0));
     ASSERT_FALSE(c.get(1, 0));
     ASSERT_FALSE(c.get(2, 0));
     ASSERT_TRUE(c.get(3, 0));
-    ASSERT_EQ(1, c.count());
+    ASSERT_TRUE(c.get(31, 0));
+    ASSERT_EQ(2, c.count());
 }
 
 TEST(Bitset2D, CanAndWithOtherBitset) {

@@ -1,5 +1,6 @@
 #include <utility>
 #include "gtest/gtest.h"
+#include "gpnode_context.h"
 #include "gpnodes_experimental.h"
 #include "gptree.h"
 #include "board.h"
@@ -9,7 +10,8 @@ using namespace std;
 class GPTreeTest: public ::testing::Test {
 public:
     Board board;
-    GPTreeTest(): board(Board(9)) {}
+    Context context;
+    GPTreeTest(): board(9), context{0, 0, BLACK, board, board} {}
 };
 
 TEST_F(GPTreeTest, MeasuresCorrectDepthOfTerminalNode) {
@@ -56,7 +58,7 @@ TEST_F(GPTreeTest, CanSubstituteTrees) {
     int expectedSum[] = {10, 14, 17, 16, 15};
     for (int i = 0; i < 5; i++) {
         GPNode* newtree = treeReplaceAt(&n0, i, &sub);
-        ASSERT_EQ(expectedSum[i], newtree->get(board)) << "replace at " << i;
+        ASSERT_EQ(expectedSum[i], newtree->get(context)) << "replace at " << i;
         cleanupTree(newtree);
     }
 }
@@ -73,14 +75,14 @@ TEST_F(GPTreeTest, CanRandomlySwapSubtreesWithNoNodeLoss) {
     PlusNode n3 = PlusNode(&c4, &c5);
     PlusNode n4 = PlusNode(&n3, &c6);
 
-    ASSERT_EQ(1 + 2 + 4, n2.get(board));
-    ASSERT_EQ(32 + 16 + 8, n4.get(board));
+    ASSERT_EQ(1 + 2 + 4, n2.get(context));
+    ASSERT_EQ(32 + 16 + 8, n4.get(context));
 
     auto trees = swapRandomSubtrees(&n2, &n4);
 
-    ASSERT_NE(trees.first->get(board), n2.get(board));
-    ASSERT_NE(trees.second->get(board), n4.get(board));
-    ASSERT_EQ(63, trees.first->get(board) + trees.second->get(board));
+    ASSERT_NE(trees.first->get(context), n2.get(context));
+    ASSERT_NE(trees.second->get(context), n4.get(context));
+    ASSERT_EQ(63, trees.first->get(context) + trees.second->get(context));
 
     cleanupTree(trees.first);
     cleanupTree(trees.second);
