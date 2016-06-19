@@ -11,6 +11,7 @@ int treeNodeCount(const GPNode* tree);
 
 // return node number num in tree
 const GPNode* treeGetNodeNum(const GPNode* tree, int num);
+GPNode* treeGetNodeNum(GPNode* tree, int num);
 
 // substitute tree2 into tree1 at num, returning a new tree
 GPNode* treeReplaceAt(const GPNode* tree1, int num, const GPNode* tree2);

@@ -45,27 +45,28 @@ vector<int> populationDropN(const unordered_map<int, int>& scores, unsigned int 
     return result;
 }
 
-// change the scale factor of a random node in the tree
-GPNode* mutateAI(const GPNode* ai) {
+// change the scale factor of given node in the tree, return new ai
+GPNode* mutateAI(const GPNode* ai, int nodeNum) {
     static const int MUTATION_SCALE_MIN = -5, MUTATION_SCALE_MAX = 5;
-    int size = treeNodeCount(ai),
-        n = rand() % size;
-    GPNode* newAi = treeGetNodeNum(ai, n)->clone();
+
+    GPNode* newAi = ai->clone();
     int scale = MUTATION_SCALE_MIN + rand() % (MUTATION_SCALE_MAX - MUTATION_SCALE_MIN + 1);
-    newAi->setScale(scale);
+    treeGetNodeNum(newAi, nodeNum)->setScale(scale);
     return newAi;
 }
 
 // randomly mutate entire population
 void randomMutation(vector<const GPNode*>& pop) {
-    static const float MUTATE_CHANCE = 0.05;
+    static const float MUTATE_CHANCE = 0.02;
 
     for (unsigned int i = 0; i < pop.size(); i++) {
-        if (rand01() < MUTATE_CHANCE) {
-            const GPNode *oldAi = pop[i],
-                         *newAi = mutateAI(oldAi);
-            pop[i] = newAi;
-            cleanupTree(oldAi);    
+        for (int node = 0; node < treeNodeCount(pop[i]); node++) {
+            if (rand01() < MUTATE_CHANCE) {
+                const GPNode *oldAi = pop[i],
+                             *newAi = mutateAI(oldAi, node);
+                pop[i] = newAi;
+                cleanupTree(oldAi);    
+            }
         }
     }
 }

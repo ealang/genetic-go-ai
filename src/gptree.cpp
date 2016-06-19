@@ -50,6 +50,10 @@ const GPNode* treeGetNodeNum(const GPNode* tree, int num) {
     return r(tree);
 }
 
+GPNode* treeGetNodeNum(GPNode* tree, int num) {
+    return const_cast<GPNode*>(treeGetNodeNum((const GPNode*)tree, num));
+}
+
 GPNode* treeReplaceAt(const GPNode* tree1, int num, const GPNode* tree2) {
     int curNode = 0;
     function<GPNode*(GPNode*, GPNode*, int)> r = [&](GPNode* node, GPNode* parent, int parentIndex) {
