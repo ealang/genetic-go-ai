@@ -21,10 +21,31 @@ vector<const GPNode*> createInitialPopulation(const TrainingOptions& options) {
     return pop;
 }
 
+struct LeaderBoard {
+    int score = 0;
+    GPNode* leader = nullptr;
+
+    void update(const vector<const GPNode*>& pop, const unordered_map<int, int>& scores) {
+        auto best = max_element(scores.begin(), scores.end(), 
+                        [](pair<int, int> a, pair<int, int> b) { return a.second < b.second; });
+
+        int i = best->first,
+            iscore = best->second;
+        if (iscore > score || leader == nullptr) {
+            score = iscore;
+            if (leader) {
+                cleanupTree(leader);
+            }
+            leader = pop[i]->clone();
+        }
+    };
+};
+
 GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& options, std::function<void(const TrainingData&)> logger) {
     struct Result {
         int ai, aiScore, benchmarkScore;
     };
+    LeaderBoard leader;
 
     TaskQueue<Result> queue;
     auto pop = createInitialPopulation(options);
@@ -46,13 +67,12 @@ GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& op
             logger(TrainingData{generation, result.ai, pop[result.ai], result.aiScore, result.benchmarkScore});
         });
         assert(scores.size() == pop.size());
+        leader.update(pop, scores);
 
         vector<const GPNode*> nextGen = options.evolveNextGeneration(pop, scores);
         cleanupPopulation(pop);
         pop = nextGen;
     }
-
-    GPNode* winner = pop[0]->clone();
     cleanupPopulation(pop);
-    return winner;
+    return leader.leader;
 }
