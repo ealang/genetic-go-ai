@@ -70,6 +70,20 @@ void randomMutation(vector<const GPNode*>& pop) {
     }
 }
 
+// stack rank
+vector<const GPNode*> evolveAmazonDotCom(const vector<const GPNode*>& oldPop, const unordered_map<int, int>& scores) {
+    const float GENERATION_PERCENT_DROP = 0.1;
+    const int numDropped = int(oldPop.size() * GENERATION_PERCENT_DROP);
+    vector<const GPNode*> newPop;
+    for (int i: populationDropN(scores, numDropped)) {
+        newPop.push_back(oldPop[i]->clone());
+    }
+    while (newPop.size() < oldPop.size()) {
+        newPop.push_back(createRandomAI());
+    }
+    return newPop;
+}
+
 // Use 2 way crossover with num offspring proportional to score
 // Allow some to survive unmodified
 vector<const GPNode*> evolvePopulationCrossover(const vector<const GPNode*>& oldPop, const unordered_map<int, int>& scores) {
