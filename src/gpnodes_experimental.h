@@ -7,7 +7,64 @@
 
 GPNode* createRandomTree(int depth);
 
-class PlusNode: public GPOperatorNode {
+
+class IntIfNode: public GPOperatorNode<INT, BOOL, INT, INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    IntIfNode(GPNode* i, GPNode* t, GPNode* e);
+};
+
+class IntEqualsNode: public GPOperatorNode<BOOL, INT, INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    IntEqualsNode(GPNode* l, GPNode* r);
+};
+
+class BoolEqualsNode: public GPOperatorNode<BOOL, BOOL, BOOL> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    BoolEqualsNode(GPNode* l, GPNode* r);
+};
+
+class AndNode: public GPOperatorNode<BOOL, BOOL, BOOL> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    AndNode(GPNode* l, GPNode* r);
+};
+
+class OrNode: public GPOperatorNode<BOOL, BOOL, BOOL> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    OrNode(GPNode* l, GPNode* r);
+};
+
+class NORNode: public GPOperatorNode<BOOL, BOOL, BOOL> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    NORNode(GPNode* l, GPNode* r);
+};
+
+class LessThanNode: public GPOperatorNode<BOOL, INT, INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+public:
+    LessThanNode(GPNode* l, GPNode* r);
+};
+
+class PlusNode: public GPOperatorNode<INT, INT, INT> {
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
@@ -15,7 +72,7 @@ public:
     PlusNode(GPNode* l, GPNode* r);
 };
 
-class MultiplyNode: public GPOperatorNode {
+class MultiplyNode: public GPOperatorNode<INT, INT, INT> {
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
@@ -23,49 +80,58 @@ public:
     MultiplyNode(GPNode* l, GPNode* r);
 };
 
-class IfLessThanNode: public GPOperatorNode {
+class BoolConstNode: public GPTerminalNode<BOOL> {
+    const bool v;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
 public:
-    IfLessThanNode(GPNode* cmpA, GPNode* cmpB, GPNode* branch1, GPNode* branch2);
+    BoolConstNode(bool v);
 };
 
-class ConstNode: public GPTerminalNode {
+class IntConstNode: public GPTerminalNode<INT> {
     const int v;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
 public:
-    ConstNode(int v);
+    IntConstNode(int v);
 };
 
-class RandomNode: public GPTerminalNode {
+class RandomIntNode: public GPTerminalNode<INT> {
     const int min, max;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
 public:
-    RandomNode(int min, int max);
+    RandomIntNode(int min, int max);
 };
 
-class ChainLengthDeltaNode: public GPTerminalNode {
+class NetworkStrengthDeltaNode: public GPTerminalNode<INT> {
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
-public:
-    ChainLengthDeltaNode();
 };
 
-class PlayerScoreDeltaNode: public GPTerminalNode {
+class NetworkStrengthNode: public GPTerminalNode<INT> {
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
-public:
-    PlayerScoreDeltaNode();
 };
 
-class LibertiesDeltaNode: public GPTerminalNode {
+class PlayerScoreDeltaNode: public GPTerminalNode<INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+};
+
+class PlayerScoreNode: public GPTerminalNode<INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+};
+
+class LibertiesDeltaNode: public GPTerminalNode<INT> {
     bool mine;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
@@ -74,39 +140,55 @@ public:
     LibertiesDeltaNode(bool mine);
 };
 
-class MaxClusterDeltaNode: public GPTerminalNode {
+class LibertiesNode: public GPTerminalNode<INT> {
+    bool mine;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
 public:
-    MaxClusterDeltaNode();
+    LibertiesNode(bool mine);
 };
 
-class CanBeCapturedNode: public GPTerminalNode {
+class MaxClusterDeltaNode: public GPTerminalNode<INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+};
+
+class CanBeCapturedNode: public GPTerminalNode<BOOL> {
     bool inclDiag;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
-public:
-    CanBeCapturedNode();
 };
 
-class CanCaptureNode: public GPTerminalNode {
+class CanCaptureNode: public GPTerminalNode<BOOL> {
     bool inclDiag;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
-public:
-    CanCaptureNode();
 };
 
-class AdjacentStonesNode: public GPTerminalNode {
+class IsWinningNode: public GPTerminalNode<BOOL> {
+    bool inclDiag;
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
+};
+
+class AdjacentStonesNode: public GPTerminalNode<INT> {
     bool mine, inclDiag;
     int getImpl(const Context&) const override;
     GPNode* cloneImpl() const override;
     std::string toStringImpl() const override;
 public:
     AdjacentStonesNode(bool mine, bool inclDiag);
+};
+
+class StoneSpacingDeltaNode: public GPTerminalNode<INT> {
+    int getImpl(const Context&) const override;
+    GPNode* cloneImpl() const override;
+    std::string toStringImpl() const override;
 };
 
 #endif

@@ -1,153 +1,254 @@
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
-#include "gpnodes_experimental.h"
 #include "bitset2d.h"
 #include "board.h"
+#include "board_intel.h"
 #include "board_iter.h"
 #include "gpnode_context.h"
+#include "gpnodes_experimental.h"
 
 using namespace std;
 
-GPNode* createRandomNode(int curDepth, int maxDepth);
+GPNode* createRandomNode(GPType, int curDepth, int maxDepth);
 GPNode* createRandomTree(int depth) {
-    return createRandomNode(1, depth);
+    return createRandomNode(INT, 1, depth);
 }
+
+/* IntIfNode */
+
+IntIfNode::IntIfNode(GPNode* i, GPNode* t, GPNode* e): GPOperatorNode({i, t, e}) { }
+
+int IntIfNode::getImpl(const Context& c) const { 
+    if (inputs[0]->get(c)) {
+        return inputs[1]->get(c);
+    } else {
+        return inputs[2]->get(c); }
+}
+
+GPNode* IntIfNode::cloneImpl() const {
+    return new IntIfNode(inputs[0]->clone(), inputs[1]->clone(), inputs[2]->clone());
+}
+
+string IntIfNode::toStringImpl() const {
+    stringstream ss;
+    ss << "IntIfNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << "," << inputs[2]->toString() << ")";
+    return ss.str();
+}
+
+/* IntEqualsNode */
+
+IntEqualsNode::IntEqualsNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
+
+int IntEqualsNode::getImpl(const Context& c) const { return inputs[0]->get(c) == inputs[1]->get(c); }
+
+GPNode* IntEqualsNode::cloneImpl() const {
+    return new IntEqualsNode(inputs[0]->clone(), inputs[1]->clone());
+}
+
+string IntEqualsNode::toStringImpl() const {
+    stringstream ss;
+    ss << "IntEqualsNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
+    return ss.str();
+}
+
+/* BoolEqualsNode */
+
+BoolEqualsNode::BoolEqualsNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
+
+int BoolEqualsNode::getImpl(const Context& c) const { return inputs[0]->get(c) == inputs[1]->get(c); }
+
+GPNode* BoolEqualsNode::cloneImpl() const {
+    return new BoolEqualsNode(inputs[0]->clone(), inputs[1]->clone());
+}
+
+string BoolEqualsNode::toStringImpl() const {
+    stringstream ss;
+    ss << "BoolEqualsNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
+    return ss.str();
+}
+
+/* LessThanNode */
+
+LessThanNode::LessThanNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
+
+int LessThanNode::getImpl(const Context& c) const { return inputs[0]->get(c) < inputs[1]->get(c); }
+
+GPNode* LessThanNode::cloneImpl() const {
+    return new LessThanNode(inputs[0]->clone(), inputs[1]->clone());
+}
+
+string LessThanNode::toStringImpl() const {
+    stringstream ss;
+    ss << "LessThanNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
+    return ss.str();
+}
+
+/* AndNode */
+
+AndNode::AndNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
+
+int AndNode::getImpl(const Context& c) const { return inputs[0]->get(c) && inputs[1]->get(c); }
+
+GPNode* AndNode::cloneImpl() const {
+    return new AndNode(inputs[0]->clone(), inputs[1]->clone());
+}
+
+string AndNode::toStringImpl() const {
+    stringstream ss;
+    ss << "AndNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
+    return ss.str();
+}
+
+/* NORNode */
+
+NORNode::NORNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
+
+int NORNode::getImpl(const Context& c) const { 
+    int v1 = inputs[0]->get(c);
+    int v2 = inputs[1]->get(c);
+    return (v1 && !v2) || (!v1 && v2);
+}
+
+GPNode* NORNode::cloneImpl() const {
+    return new NORNode(inputs[0]->clone(), inputs[1]->clone());
+}
+
+string NORNode::toStringImpl() const {
+    stringstream ss;
+    ss << "NORNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
+    return ss.str();
+}
+
+/* OrNode */
+
+OrNode::OrNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
+
+int OrNode::getImpl(const Context& c) const { return inputs[0]->get(c) || inputs[1]->get(c); }
+
+GPNode* OrNode::cloneImpl() const {
+    return new OrNode(inputs[0]->clone(), inputs[1]->clone());
+}
+
+string OrNode::toStringImpl() const {
+    stringstream ss;
+    ss << "OrNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
+    return ss.str();
+}
+
 
 /* PlusNode */
 
-PlusNode::PlusNode(GPNode* l, GPNode* r) : GPOperatorNode(l, r) { }
+PlusNode::PlusNode(GPNode* l, GPNode* r): GPOperatorNode({l, r}) { }
 
-int PlusNode::getImpl(const Context& c) const { return nodes[0]->get(c) + nodes[1]->get(c); }
+int PlusNode::getImpl(const Context& c) const { return inputs[0]->get(c) + inputs[1]->get(c); }
 
 GPNode* PlusNode::cloneImpl() const {
-    return new PlusNode(nodes[0]->clone(), nodes[1]->clone());
+    return new PlusNode(inputs[0]->clone(), inputs[1]->clone());
 }
 
 string PlusNode::toStringImpl() const {
     stringstream ss;
-    ss << "PlusNode(" << nodes[0]->toString() << "," << nodes[1]->toString() << ")";
+    ss << "PlusNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
     return ss.str();
 }
 
 /* MultiplyNode */
 
-MultiplyNode::MultiplyNode(GPNode* l, GPNode* r) : GPOperatorNode(l, r) { }
+MultiplyNode::MultiplyNode(GPNode* l, GPNode* r) : GPOperatorNode({l, r}) { }
 
-int MultiplyNode::getImpl(const Context& c) const { return nodes[0]->get(c) * nodes[1]->get(c); }
+int MultiplyNode::getImpl(const Context& c) const { return inputs[0]->get(c) * inputs[1]->get(c); }
 
 GPNode* MultiplyNode::cloneImpl() const {
-    return new MultiplyNode(nodes[0]->clone(), nodes[1]->clone());
+    return new MultiplyNode(inputs[0]->clone(), inputs[1]->clone());
 }
 
 string MultiplyNode::toStringImpl() const {
     stringstream ss;
-    ss << "MultiplyNode(" << nodes[0]->toString() << "," << nodes[1]->toString() << ")";
+    ss << "MultiplyNode(" << inputs[0]->toString() << "," << inputs[1]->toString() << ")";
     return ss.str();
 }
 
-/* IfLessThanNode */
+/* BoolConstNode */
 
-IfLessThanNode::IfLessThanNode(GPNode* cmpA, GPNode* cmpB, GPNode* branch1, GPNode* branch2)
-    : GPOperatorNode(cmpA, cmpB, branch1, branch2) { }
+BoolConstNode::BoolConstNode(bool v): v(v) {}
 
-int IfLessThanNode::getImpl(const Context& c) const {
-    if (nodes[0]->get(c) < nodes[1]->get(c)) {
-        return nodes[2]->get(c);
-    } else {
-        return nodes[3]->get(c);
-    }
+int BoolConstNode::getImpl(const Context&) const { return v; }
+
+GPNode* BoolConstNode::cloneImpl() const {
+    return new BoolConstNode(v);
 }
 
-GPNode* IfLessThanNode::cloneImpl() const {
-    return new IfLessThanNode(nodes[0]->clone(),
-                              nodes[1]->clone(),
-                              nodes[2]->clone(),
-                              nodes[3]->clone());
-}
-
-string IfLessThanNode::toStringImpl() const {
+string BoolConstNode::toStringImpl() const {
     stringstream ss;
-    ss << "IfLessThanNode(" << nodes[0]->toString() << ","
-                            << nodes[1]->toString() << ","
-                            << nodes[2]->toString() << ","
-                            << nodes[3]->toString() << ")";
+    ss << "BoolConstNode(" << v << ")";
     return ss.str();
 }
 
-/* ConstNode */
+/* IntConstNode */
 
-ConstNode::ConstNode(int v): v(v) {}
+IntConstNode::IntConstNode(int v): v(v) {}
 
-int ConstNode::getImpl(const Context&) const { return v; }
+int IntConstNode::getImpl(const Context&) const { return v; }
 
-GPNode* ConstNode::cloneImpl() const {
-    return new ConstNode(v);
+GPNode* IntConstNode::cloneImpl() const {
+    return new IntConstNode(v);
 }
 
-string ConstNode::toStringImpl() const {
+string IntConstNode::toStringImpl() const {
     stringstream ss;
-    ss << "ConstNode(" << v << ")";
+    ss << "IntConstNode(" << v << ")";
     return ss.str();
 }
 
-/* RandomNode */
+/* RandomIntNode */
 
-RandomNode::RandomNode(int min, int max): min(min), max(max) { }
+RandomIntNode::RandomIntNode(int min, int max): min(min), max(max) { }
 
-int RandomNode::getImpl(const Context&) const {
+int RandomIntNode::getImpl(const Context&) const {
     return min + rand() % (max - min + 1);
 }
 
-GPNode* RandomNode::cloneImpl() const {
-    return new RandomNode(min, max);
+GPNode* RandomIntNode::cloneImpl() const {
+    return new RandomIntNode(min, max);
 }
 
-string RandomNode::toStringImpl() const {
+string RandomIntNode::toStringImpl() const {
     stringstream ss;
-    ss << "RandomNode(" << min << "," << max << ")";
+    ss << "RandomIntNode(" << min << "," << max << ")";
     return ss.str();
 }
 
-/* ChainLengthDeltaNode */
+/* NetworkStrengthDeltaNode */
 
-ChainLengthDeltaNode::ChainLengthDeltaNode() { }
-
-int ChainLengthDeltaNode::getImpl(const Context& c) const {
-    auto chainLengthForBoard = [](const Board& board, Color color) {
-        int len = 0;
-        Bitset2D visited(board.size(), board.size());
-        iterateBoard(board, [&](int x, int y) {
-            if (board.get(x, y) == color && !visited.get(x, y)) {
-                int count = 0;
-                iterateConnectedStones(board, x, y, false, [&](int x, int y) {
-                    visited.set(x, y, true);
-                    ++count;
-                    return true;
-                });
-                if (count > 1) {
-                    len += count;
-                }
-            }
-            return true;
-        });
-        return len;
-    };
-    return chainLengthForBoard(c.board, c.color) -
-           chainLengthForBoard(c.prevBoard, c.color);
+int NetworkStrengthDeltaNode::getImpl(const Context& c) const {
+    return stoneNetworkStrength(c.board, c.color) -
+           stoneNetworkStrength(c.prevBoard, c.color);
 }
 
-GPNode* ChainLengthDeltaNode::cloneImpl() const {
-    return new ChainLengthDeltaNode();
+GPNode* NetworkStrengthDeltaNode::cloneImpl() const {
+    return new NetworkStrengthDeltaNode();
 }
 
-string ChainLengthDeltaNode::toStringImpl() const {
-    return "ChainLengthDeltaNode()";
+string NetworkStrengthDeltaNode::toStringImpl() const {
+    return "NetworkStrengthDeltaNode()";
+}
+
+/* NetworkStrengthNode */
+
+int NetworkStrengthNode::getImpl(const Context& c) const {
+    return stoneNetworkStrength(c.board, c.color);
+}
+
+GPNode* NetworkStrengthNode::cloneImpl() const {
+    return new NetworkStrengthNode();
+}
+
+string NetworkStrengthNode::toStringImpl() const {
+    return "NetworkStrengthNode()";
 }
 
 /* PlayerScoreDeltaNode */
- 
-PlayerScoreDeltaNode::PlayerScoreDeltaNode() { }
 
 int PlayerScoreDeltaNode::getImpl(const Context& c) const {
     return c.board.score(c.color) - c.prevBoard.score(c.color);
@@ -161,32 +262,28 @@ string PlayerScoreDeltaNode::toStringImpl() const {
     return "PlayerScoreDeltaNode()";
 }
 
+/* PlayerScoreNode */
+ 
+int PlayerScoreNode::getImpl(const Context& c) const {
+    return c.board.score(c.color);
+}
+
+GPNode* PlayerScoreNode::cloneImpl() const {
+    return new PlayerScoreNode();
+}
+
+string PlayerScoreNode::toStringImpl() const {
+    return "PlayerScoreNode()";
+}
+
 /* LibertiesDeltaNode */
  
 LibertiesDeltaNode::LibertiesDeltaNode(bool mine): mine(mine) { }
 
 int LibertiesDeltaNode::getImpl(const Context& c) const {
-    auto libertiesForBoard = [](const Board& board, Color color) {
-        Bitset2D visited(board.size(), board.size());
-        int liberties = 0;
-        iterateBoard(board, [&](int x, int y) {
-            if (board.get(x, y) == color) {
-                iterateAdjacentCells(board, x, y, [&](int x, int y) {
-                    if (board.get(x, y) == NONE && !visited.get(x, y)) {
-                        visited.set(x, y);
-                        ++liberties;
-                    }
-                });
-            }
-            return true;
-        });
-        return liberties;
-    };
-
     Color color = mine ? c.color : otherColor(c.color);
-    return (mine ? 1 : -1) *
-           (libertiesForBoard(c.board, color) -
-            libertiesForBoard(c.prevBoard, color));
+    return (numLiberties(c.board, color) -
+            numLiberties(c.prevBoard, color));
 }
 
 GPNode* LibertiesDeltaNode::cloneImpl() const {
@@ -199,32 +296,30 @@ string LibertiesDeltaNode::toStringImpl() const {
     return ss.str();
 }
 
+/* LibertiesNode */
+ 
+LibertiesNode::LibertiesNode(bool mine): mine(mine) { }
+
+int LibertiesNode::getImpl(const Context& c) const {
+    Color color = mine ? c.color : otherColor(c.color);
+    return numLiberties(c.board, color);
+}
+
+GPNode* LibertiesNode::cloneImpl() const {
+    return new LibertiesNode(mine);
+}
+
+string LibertiesNode::toStringImpl() const {
+    stringstream ss;
+    ss << "LibertiesNode(" << (mine ? "friendly" : "opponent") << ")";
+    return ss.str();
+}
+
 /* MaxClusterDeltaNode */
 
-MaxClusterDeltaNode::MaxClusterDeltaNode() { }
-
 int MaxClusterDeltaNode::getImpl(const Context& c) const {
-    auto countClusterAround = [](int x, int y, const Board& board, Color color) {
-        int maxCluster = 0;
-        Bitset2D visited(board.size(), board.size());
-        iterateAdjacentDiagCells(board, x, y, [&](int x, int y) {
-            if (!visited.get(x, y) && board.get(x, y) == color) {
-                bool inclDiag = true;
-                int clusterSize = 0;
-                iterateConnectedStones(board, x, y, inclDiag, [&](int x, int y) {
-                    if (!visited.get(x, y)) {
-                        visited.set(x, y);
-                        ++clusterSize;
-                    }
-                    return true;
-                });
-                maxCluster = max(clusterSize, maxCluster);
-            }
-        });
-        return maxCluster;
-    };
-    return countClusterAround(c.x, c.y, c.board, c.color) -
-           countClusterAround(c.x, c.y, c.prevBoard, c.color);
+    return maxClusterSize(c.board, c.color) -
+           maxClusterSize(c.prevBoard, c.color);
 }
 
 GPNode* MaxClusterDeltaNode::cloneImpl() const {
@@ -234,27 +329,11 @@ GPNode* MaxClusterDeltaNode::cloneImpl() const {
 string MaxClusterDeltaNode::toStringImpl() const {
     return "MaxClusterDeltaNode()";
 }
+
 /* CanBeCapturedNode */
 
-CanBeCapturedNode::CanBeCapturedNode() { }
-
 int CanBeCapturedNode::getImpl(const Context& c) const {
-    bool wasCaptured = false;
-    Color enemyColor = otherColor(c.color);
-    iterateLiberties(c.board, c.x, c.y, [&](int x, int y){
-        Board altBoard = c.board;
-        try {
-            altBoard.set(x, y, enemyColor);
-        } catch (const KoRuleViolated&){
-        }
-        if (altBoard.captureCount(enemyColor) > c.board.captureCount(enemyColor)) {
-            wasCaptured = true;
-            return false;
-        } else {
-            return true;
-        }
-    });
-    return wasCaptured ? -1 : 1;
+    return canBeCaptured(c.board, c.color);
 }
 
 GPNode* CanBeCapturedNode::cloneImpl() const {
@@ -262,15 +341,27 @@ GPNode* CanBeCapturedNode::cloneImpl() const {
 }
 
 string CanBeCapturedNode::toStringImpl() const {
-    return "CanBeCapturedNode(x, y)";
+    return "CanBeCapturedNode()";
+}
+
+/* IsWinningNode */
+
+int IsWinningNode::getImpl(const Context& c) const {
+    return c.board.score(c.color) > c.board.score(otherColor(c.color));
+}
+
+GPNode* IsWinningNode::cloneImpl() const {
+    return new IsWinningNode();
+}
+
+string IsWinningNode::toStringImpl() const {
+    return "IsWinningNode()";
 }
 
 /* CanCaptureNode */
 
-CanCaptureNode::CanCaptureNode() { }
-
 int CanCaptureNode::getImpl(const Context& c) const {
-    return c.prevBoard.captureCount(c.color) < c.board.captureCount(c.color);
+    return canBeCaptured(c.board, otherColor(c.color));
 }
 
 GPNode* CanCaptureNode::cloneImpl() const {
@@ -278,7 +369,7 @@ GPNode* CanCaptureNode::cloneImpl() const {
 }
 
 string CanCaptureNode::toStringImpl() const {
-    return "CanCaptureNode(x, y)";
+    return "CanCaptureNode()";
 }
 
 /* AdjacentStonesNode */
@@ -286,16 +377,8 @@ string CanCaptureNode::toStringImpl() const {
 AdjacentStonesNode::AdjacentStonesNode(bool mine, bool inclDiag): mine(mine), inclDiag(inclDiag) { }
 
 int AdjacentStonesNode::getImpl(const Context& c) const {
-    int count = 0;
     Color color = mine ? c.color : otherColor(c.color);
-    auto func = inclDiag ? iterateAdjacentDiagCells
-                         : iterateAdjacentCells;
-    func(c.board, c.x, c.y, [&](int x, int y) {
-        if (c.board.get(x, y) == color) {
-            ++count;
-        }
-    });
-    return count;
+    return numAdjacentStones(c.board, inclDiag, c.x, c.y, color);
 }
 
 GPNode* AdjacentStonesNode::cloneImpl() const {
@@ -304,47 +387,119 @@ GPNode* AdjacentStonesNode::cloneImpl() const {
 
 string AdjacentStonesNode::toStringImpl() const {
     stringstream ss;
-    ss << "AdjacentStonesNode(x, y, " << (mine ? "friendly" : "opponent") << ")";
+    ss << "AdjacentStonesNode(" << (mine ? "friendly" : "opponent") << "," << (inclDiag ? "includeDiag" : "excludeDiag" ) << ")";
     return ss.str();
+}
+
+/* StoneSpacingDeltaNode */
+
+int StoneSpacingDeltaNode::getImpl(const Context& c) const {
+    return maxStoneSpacing(c.board, c.color) -
+           maxStoneSpacing(c.prevBoard, c.color);
+}
+
+GPNode* StoneSpacingDeltaNode::cloneImpl() const {
+    return new StoneSpacingDeltaNode();
+}
+
+string StoneSpacingDeltaNode::toStringImpl() const {
+    return "StoneSpacingDeltaNode()";
 }
 
 /* random tree */
 
-GPNode* createRandomNode(int curDepth, int maxDepth) {
-    static const int CONST_MIN = -5, CONST_MAX = 5;
+GPNode* createRandomNode(GPType type, int curDepth, int maxDepth) {
+    static const int CONST_MIN = -10, CONST_MAX = 10;
     static auto randint = [](int min, int max){ return min + rand() % (max - min); };
     static auto randbool = [](){ return (bool)(rand() % 2); };
-    static vector<function<GPNode*(void)>> terminalFac = {
-        [](){ return new ConstNode(randint(CONST_MIN, CONST_MAX + 1)); },
-        [](){ return new RandomNode(CONST_MIN, CONST_MAX); },
-        [](){ return new ChainLengthDeltaNode(); },
+    static vector<function<GPNode*(void)>> intTermFac = {
+        [](){ return new IntConstNode(randint(CONST_MIN, CONST_MAX + 1)); },
+        [](){ return new IntConstNode(randint(0, 2)); },
+        [](){ return new RandomIntNode(CONST_MIN, CONST_MAX); },
+
+        [](){ return new NetworkStrengthDeltaNode(); },
+        [](){ return new NetworkStrengthNode(); },
+
         [](){ return new PlayerScoreDeltaNode(); },
+        [](){ return new PlayerScoreNode(); },
+
         [](){ return new LibertiesDeltaNode(randbool()); },
+        [](){ return new LibertiesNode(randbool()); },
+
         [](){ return new MaxClusterDeltaNode(); },
-        [](){ return new CanBeCapturedNode(); },
-        [](){ return new CanCaptureNode(); },
+
         [](){ return new AdjacentStonesNode(randbool(), randbool()); },
+        [](){ return new StoneSpacingDeltaNode(); },
     };
-    static vector<function<GPNode*(int, int)>> internalFac = {
+    static vector<function<GPNode*(void)>> boolTermFac = {
+        [](){ return new BoolConstNode(randbool()); },
+        [](){ return new CanCaptureNode(); },
+        [](){ return new CanBeCapturedNode(); },
+        [](){ return new IsWinningNode(); },
+    };
+    static vector<function<GPNode*(int, int)>> boolInternalFac = {
         [](int curDepth, int maxDepth) {
-            return new PlusNode(createRandomNode(curDepth + 1, maxDepth),
-                                createRandomNode(curDepth + 1, maxDepth));
+            return new IntEqualsNode(createRandomNode(INT, curDepth + 1, maxDepth),
+                                     createRandomNode(INT, curDepth + 1, maxDepth));
+        },
+        [](int curDepth, int maxDepth) {
+            return new BoolEqualsNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                                      createRandomNode(BOOL, curDepth + 1, maxDepth));
+        },
+        [](int curDepth, int maxDepth) {
+            return new LessThanNode(createRandomNode(INT, curDepth + 1, maxDepth),
+                                    createRandomNode(INT, curDepth + 1, maxDepth));
+        },
+        [](int curDepth, int maxDepth) {
+            return new AndNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                               createRandomNode(BOOL, curDepth + 1, maxDepth));
+        },
+        [](int curDepth, int maxDepth) {
+            return new OrNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                              createRandomNode(BOOL, curDepth + 1, maxDepth));
+        },
+        [](int curDepth, int maxDepth) {
+            return new NORNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                               createRandomNode(BOOL, curDepth + 1, maxDepth));
+        },
+    };
+    static vector<function<GPNode*(int, int)>> intInternalFac = {
+        [](int curDepth, int maxDepth) {
+            return new IntIfNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                                 createRandomNode(INT, curDepth + 1, maxDepth),
+                                 new IntConstNode(0));
+        },
+        [](int curDepth, int maxDepth) {
+            return new IntIfNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                                 createRandomNode(INT, curDepth + 1, maxDepth),
+                                 createRandomNode(INT, curDepth + 1, maxDepth));
+        },
+        [](int curDepth, int maxDepth) {
+            return new PlusNode(createRandomNode(INT, curDepth + 1, maxDepth),
+                                createRandomNode(INT, curDepth + 1, maxDepth));
         },
         [](int curDepth, int maxDepth){
-            return new MultiplyNode(createRandomNode(curDepth + 1, maxDepth),
-                                    createRandomNode(curDepth + 1, maxDepth));
+            return new MultiplyNode(createRandomNode(INT, curDepth + 1, maxDepth),
+                                    createRandomNode(INT, curDepth + 1, maxDepth));
         },
         [](int curDepth, int maxDepth){
-            return new IfLessThanNode(createRandomNode(curDepth + 1, maxDepth),
-                                      createRandomNode(curDepth + 1, maxDepth),
-                                      createRandomNode(curDepth + 1, maxDepth),
-                                      createRandomNode(curDepth + 1, maxDepth));
+            return new IntIfNode(createRandomNode(BOOL, curDepth + 1, maxDepth),
+                                 createRandomNode(INT, curDepth + 1, maxDepth),
+                                 createRandomNode(INT, curDepth + 1, maxDepth));
         },
     };
 
     if (curDepth == maxDepth) {
-        return terminalFac[randint(0, terminalFac.size())]();
+        if (type == INT) {
+            return intTermFac[randint(0, intTermFac.size())]();
+        } else {
+            return boolTermFac[randint(0, boolTermFac.size())]();
+        }
     } else {
-        return internalFac[randint(0, internalFac.size())](curDepth, maxDepth);
+        if (type == INT) {
+            return intInternalFac[randint(0, intInternalFac.size())](curDepth, maxDepth);
+        } else {
+            return boolInternalFac[randint(0, boolInternalFac.size())](curDepth, maxDepth);
+        }
     }
 }

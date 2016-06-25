@@ -22,12 +22,12 @@ public:
 };
 
 TEST_F(GPNodesExperimentalTest, CanAddNumbers) {
-    auto n1 = ConstNode(1), n2 = ConstNode(2);
+    auto n1 = IntConstNode(1), n2 = IntConstNode(2);
     ASSERT_EQ(3, PlusNode(&n1, &n2).get(blackContext));
 }
 
 TEST_F(GPNodesExperimentalTest, CanGenerateRandomNumbers) {
-    auto node = RandomNode(0, 10);
+    auto node = RandomIntNode(0, 10);
     for (int i = 0; i < 10000; i++) {
         int n = node.get(blackContext);
         ASSERT_TRUE(n >= 0 && n <= 10);
@@ -50,7 +50,7 @@ TEST_F(GPNodesExperimentalTest, CanStringPrintRandomTree) {
 }
 
 TEST_F(GPNodesExperimentalTest, CalculatesNumberOfConnectedStones) {
-    auto chain = ChainLengthDeltaNode();
+    auto chain = NetworkStrengthDeltaNode();
 
     ASSERT_EQ(0, chain.get(set(0, 0, BLACK)));
     ASSERT_EQ(2, chain.get(set(1, 0, BLACK)));
@@ -62,7 +62,7 @@ TEST_F(GPNodesExperimentalTest, CalculatesNumberOfConnectedStones) {
 }
 
 TEST_F(GPNodesExperimentalTest, CalulatesNumberOfConnectedStonesAndDoesntWrap) {
-    auto chain = ChainLengthDeltaNode();
+    auto chain = NetworkStrengthDeltaNode();
     board.set(0, 1, BLACK);
     ASSERT_EQ(0, chain.get(set(4, 0, BLACK)));
 }
@@ -80,30 +80,22 @@ TEST_F(GPNodesExperimentalTest, CalculatesNumberOfLiberties) {
     {
         Context context = set(1, 1, WHITE);
         ASSERT_EQ(1, LibertiesDeltaNode(mine).get(context));
-        ASSERT_EQ(1, LibertiesDeltaNode(!mine).get(context));
+        ASSERT_EQ(-1, LibertiesDeltaNode(!mine).get(context));
     }
 }
 
 TEST_F(GPNodesExperimentalTest, CanDetectChangesInClusterSize) {
-    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(0, 0, BLACK)));
+    EXPECT_EQ(1, MaxClusterDeltaNode().get(set(0, 0, BLACK)));
     EXPECT_EQ(1, MaxClusterDeltaNode().get(set(1, 0, BLACK)));
     EXPECT_EQ(0, MaxClusterDeltaNode().get(set(3, 0, BLACK)));
     EXPECT_EQ(2, MaxClusterDeltaNode().get(set(2, 0, BLACK)));
 
-    EXPECT_EQ(0, MaxClusterDeltaNode().get(set(1, 1, WHITE)));
+    EXPECT_EQ(1, MaxClusterDeltaNode().get(set(1, 1, WHITE)));
     EXPECT_EQ(0, MaxClusterDeltaNode().get(set(3, 3, WHITE)));
     EXPECT_EQ(1, MaxClusterDeltaNode().get(set(4, 3, WHITE)));
     EXPECT_EQ(0, MaxClusterDeltaNode().get(set(1, 3, WHITE)));
     EXPECT_EQ(0, MaxClusterDeltaNode().get(set(3, 1, WHITE)));
     EXPECT_EQ(4, MaxClusterDeltaNode().get(set(2, 2, WHITE)));
-}
-
-TEST_F(GPNodesExperimentalTest, CalculatesLessThan) {
-    ConstNode c5(5);
-    ConstNode c10(10);
-    ConstNode c1(1);
-    ConstNode c2(2);
-    EXPECT_EQ(5, IfLessThanNode(&c1, &c2, &c5, &c10).get(blackContext));
 }
 
 TEST_F(GPNodesExperimentalTest, CalculatesNearbyStones) {
@@ -135,25 +127,19 @@ TEST_F(GPNodesExperimentalTest, DetectsIfCanBeCaptured) {
     board.set(0, 1, BLACK);
 
     {
-        Board newBoard = board;
-        newBoard.set(0, 0, WHITE);
-        Context c = Context{0, 0, WHITE, board, newBoard};
+        Context c = set(0, 0, WHITE);
         EXPECT_TRUE(CanBeCapturedNode().get(c));
     }
     {
-        Context c = set(1, 1, WHITE);
-        EXPECT_EQ(1, CanBeCapturedNode().get(c));
+        Context c = set(1, 0, WHITE);
+        EXPECT_FALSE(CanBeCapturedNode().get(c));
     }
 }
 
 TEST_F(GPNodesExperimentalTest, DetectsIfCanCapture) {
     board.set(0, 0, WHITE);
-    board.set(0, 1, BLACK);
-
     {
-        Board newBoard = board;
-        newBoard.set(1, 0, BLACK);
-        Context c = Context{1, 0, BLACK, board, newBoard};
+        Context c = set(0, 1, BLACK);
         EXPECT_TRUE(CanCaptureNode().get(c));
     }
 }

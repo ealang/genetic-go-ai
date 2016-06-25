@@ -6,14 +6,14 @@
 #include "gpnodes_experimental.h"
 
 TEST(AIMatchTest, CanPlayGame) {
-    ConstNode ai(1);
+    IntConstNode ai(1);
     auto result = playAIMatch(ai, ai, 3, -1);
     ASSERT_EQ(9, result.numTurns);
 }
 
 TEST(AIMatchTest, CanGetMove) {
     auto board = Board(9);
-    auto node = ConstNode(1);
+    auto node = IntConstNode(1);
     auto move = getBestMove(board, node, BLACK);
     EXPECT_EQ(8, move.x);
     EXPECT_EQ(8, move.y);

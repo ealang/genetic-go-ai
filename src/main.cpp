@@ -97,7 +97,7 @@ void logTrainingData(const TrainingData& data) {
 }
 
 GPNode* trainAI(int boardSize) {
-    RandomNode benchmarkAI(0, 10000);
+    RandomIntNode benchmarkAI(0, 10000);
 
     TrainingOptions options;
     options.populationSize = 50;

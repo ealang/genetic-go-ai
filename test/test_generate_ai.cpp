@@ -8,14 +8,14 @@
 using namespace std;
 
 TEST(TestGenerateAI, LogsTrainingInformation) {
-    RandomNode benchmark(0, 1000);
+    RandomIntNode benchmark(0, 1000);
 
     TrainingOptions options;
     options.populationSize = 1;
     options.numGenerations = 1;
     options.gamesPerEvaluation = 1;
     options.benchmarkAI = &benchmark;
-    options.createNewAI = [](){ return new RandomNode(0, 10); };
+    options.createNewAI = [](){ return new RandomIntNode(0, 10); };
     options.evolveNextGeneration = [](const vector<const GPNode*>& pop, const unordered_map<int, int>&) {
         vector<const GPNode*> newPop;
         for (auto ai: pop) {
