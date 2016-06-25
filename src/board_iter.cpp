@@ -29,6 +29,16 @@ void iterateBoard(const Board& board, std::function<bool(int, int)> callback) {
     }
 }
 
+void iterateStones(const Board& board, Color color, std::function<bool(int, int)> callback) {
+    iterateBoard(board, [&](int x, int y) {
+        if (board.get(x, y) == color) {
+            return callback(x, y);
+        } else {
+            return true;
+        }
+    });
+}
+
 void iterateLiberties(const Board& board, int x, int y, std::function<bool(int, int)> callback) {
     if (board.get(x, y) != NONE) {
         Bitset2D visited(board.size(), board.size());
@@ -97,3 +107,20 @@ void iterateConnectedStonesWithExtraStoneAt(const Board& board, int startX, int 
     };
     r(startX, startY);
 }
+
+void iterateClusters(const Board& board, Color color, std::function<bool(int, int, int)> callback) {
+    int clusterNum = 0;
+    Bitset2D visited(board.size(), board.size());
+    iterateStones(board, color, [&](int x, int y) {
+        if (!visited.get(x, y)) {
+            callback(x, y, clusterNum++);
+            bool inclDiag = true;
+            iterateConnectedStones(board, x, y, !inclDiag, [&](int x, int y) {
+                visited.set(x, y);
+                return true;
+            });
+        }
+        return true;
+    });
+}
+

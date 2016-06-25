@@ -3,6 +3,7 @@
 #include "board.h"
 #include "gpnode.h"
 #include "gpnode_context.h"
+#include "board_intel.h"
 
 Color nextTurn(Color c) { return c == BLACK ? WHITE : BLACK; }
 
@@ -16,7 +17,7 @@ Move getBestMove(const Board& board, const GPNode& aiLogic, Color color) {
     int bestscore = 0;
     for (int x = 0; x < board.size(); x++) {
         for (int y = 0; y < board.size(); y++) {
-            if (board.empty(x, y) && !board.isSuicideMove(x, y, color)) {
+            if (board.empty(x, y) && !isSuicideMove(board, x, y, color)) {
                 auto newboard = board;
                 try {
                     newboard.set(x, y, color);

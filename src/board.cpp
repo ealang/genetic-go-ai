@@ -41,17 +41,6 @@ int Board::score(Color c) const {
     return territoryCount(c) + captureCount(c);
 }
 
-bool Board::isSuicideMove(int x, int y, Color forColor) const {
-    Color enemyColor = otherColor(forColor);
-    Board possible = *this;
-    try {
-        possible.set(x, y, forColor);
-        return captureCount(enemyColor) < possible.captureCount(enemyColor);
-    } catch (const KoRuleViolated&) {
-        return false;
-    }
-}
-
 string Board::toString() const {
     stringstream ss;
     char chars[] = {' ', 'B', 'W'};
