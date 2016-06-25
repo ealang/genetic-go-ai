@@ -1,24 +1,24 @@
 class Series:
     def __init__(self):
-        from collections import defaultdict
-        self._icount = defaultdict(int)
-        self._isum = defaultdict(float)
+        self._imax = {}
         self.data_x = []
         self.data_y = []
 
     def push(self, i, score):
-        self._icount[i] += 1
-        self._isum[i] += score
+        if i not in self._imax:
+            self._imax[i] = score
+        else:
+            self._imax[i] = max(self._imax[i], score)
         self.data_x.append(i)
         self.data_y.append(score)
 
     @property
-    def trend_x(self):
-        return sorted(self._isum.keys())
+    def max_x(self):
+        return sorted(self._imax.keys())
 
     @property
-    def trend_y(self):
-        return [self._isum[i] / self._icount[i] for i in self.trend_x]
+    def max_y(self):
+        return [self._imax[i] for i in self.max_x]
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
 
     def plot_series(series, color_code, label=None):
         pyplot.plot(series.data_x, series.data_y, '.' + color_code)
-        pyplot.plot(series.trend_x, series.trend_y, color_code, linewidth=2, label=label)
+        pyplot.plot(series.max_x, series.max_y, color_code, linewidth=2, label=label)
 
     color_codes = ['b', 'r', 'g', 'm', 'c', 'k']
     if len(sys.argv) == 1:
@@ -49,13 +49,13 @@ def main():
 
     else:
         filenames = sys.argv[1:]
-        series_list = [Series() for _ in filenames]
-        for series, filename, color_code in zip(series_list, filenames, cycle(color_codes)):
+        for filename, color_code in zip(filenames, cycle(color_codes)):
+            series = Series()
             with open(filename) as fd:
                 load_series(series, fd)
             plot_series(series, color_code, filename)
+        pyplot.legend()
 
-    pyplot.legend()
     pyplot.xlabel('iteration')
     pyplot.ylabel('performance')
     pyplot.show()
