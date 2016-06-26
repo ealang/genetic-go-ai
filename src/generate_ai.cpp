@@ -1,4 +1,4 @@
-#include <cassert>
+#include <algorithm>
 #include "aimatch.h"
 #include "generate_ai.h"
 #include "gpnode.h"
@@ -50,7 +50,6 @@ GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& op
     TaskQueue<Result> queue;
     auto pop = createInitialPopulation(options);
     for (int generation = 0; generation < options.numGenerations; generation++) {
-        unordered_map<int, int> scores;
         for (int ai = 0; ai < options.populationSize; ai++) {
             queue.submit([ai, boardSize, maxTurnsPerGame, &pop, &options](){
                 int benchmarkScore = 0, aiScore = 0;
@@ -62,11 +61,12 @@ GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& op
                 return Result{ai, aiScore, benchmarkScore};
             });
         }
-        queue.forEach([&pop, &scores, generation, &logger](Result result) {
+        unordered_map<int, int> scores;
+        for (int i = 0; i < options.populationSize; i++) {
+            Result result = queue.get();
             scores.insert(pair<int, int>(result.ai, result.aiScore));
             logger(TrainingData{generation, result.ai, pop[result.ai], result.aiScore, result.benchmarkScore});
-        });
-        assert(scores.size() == pop.size());
+        }
         leader.update(pop, scores);
 
         vector<const GPNode*> nextGen = options.evolveNextGeneration(pop, scores);
