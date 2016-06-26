@@ -14,8 +14,8 @@ using namespace std;
 void printFancyBoard(const Board& board) {
     int size = board.size();
     auto printBorderCell = [size](int i) {
-        rlutil::setBackgroundColor(rlutil::GREY);
-        rlutil::setColor(rlutil::DARKGREY);
+        rlutil::setBackgroundColor(rlutil::BLUE);
+        rlutil::setColor(rlutil::GREY);
         if (i >= 1 && i <= size) 
             cout << i % 10;
         else
@@ -28,7 +28,7 @@ void printFancyBoard(const Board& board) {
     };
     auto printStone = [](int x, int y, Color stone) {
         static int colors[] = {rlutil::BLACK, rlutil::BLACK, rlutil::WHITE};
-        int bgColor = ((y + x) % 2) ? rlutil::BLUE : rlutil::CYAN;
+        int bgColor = ((y + x) % 2) ? rlutil::GREY : rlutil::CYAN;
         rlutil::setBackgroundColor(bgColor);
         rlutil::setColor(colors[stone]);
         cout << (stone == NONE ? ' ' : 'o');
@@ -92,8 +92,7 @@ void logTrainingData(const TrainingData& data) {
     cout << "training_data:"
          << " gen=" << data.generationNum
          << " ai=" << data.aiNum << " (size=" << treeNodeCount(data.ai) << " depth=" << treeDepth(data.ai) << ")"
-         << " ai score=" << data.aiScore
-         << " benchmark score=" << data.benchmarkScore << endl;
+         << " score=" << data.score << endl;
 }
 
 GPNode* trainAI(int boardSize) {

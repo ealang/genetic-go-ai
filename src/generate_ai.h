@@ -11,7 +11,7 @@ struct TrainingData {
     int generationNum;
     int aiNum;
     const GPNode* ai;
-    int aiScore, benchmarkScore;
+    float score;
 };
 
 struct TrainingOptions {
@@ -28,7 +28,7 @@ struct TrainingOptions {
     // produce next generation
     std::function<
         std::vector<const GPNode*>
-        (const std::vector<const GPNode*>&, const std::unordered_map<int, int>&)>
+        (const std::vector<const GPNode*>&, const std::unordered_map<int, float>&)>
             evolveNextGeneration;
 };
 

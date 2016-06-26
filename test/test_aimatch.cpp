@@ -7,7 +7,7 @@
 
 TEST(AIMatchTest, CanPlayGame) {
     IntConstNode ai(1);
-    auto result = playAIMatch(ai, ai, 3, -1);
+    auto result = playAIMatch(ai, ai, BLACK, 3, -1);
     ASSERT_EQ(9, result.numTurns);
 }
 

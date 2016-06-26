@@ -38,11 +38,10 @@ Move getBestMove(const Board& board, const GPNode& aiLogic, Color color) {
     return bestmove;
 }
 
-MatchResult playAIMatch(const GPNode& black, const GPNode& white, int boardSize, int turnLimit) {
+MatchResult playAIMatch(const GPNode& black, const GPNode& white, Color turn, int boardSize, int turnLimit) {
     Board board(boardSize);
 
     int nturns = 0;
-    Color turn = BLACK;
     while ((nturns < turnLimit || turnLimit == -1) && nturns < boardSize * boardSize) {
         auto move = getBestMove(board, turn == BLACK ? black : white, turn);
         board.set(move.x, move.y, turn);

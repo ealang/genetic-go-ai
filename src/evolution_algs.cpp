@@ -13,15 +13,16 @@ float rand01() {
 }
 
 int randExcluding(int n, int exclude) {
-    assert(n > 1);
-    int v;
-    do {
-        v = rand() % n;
-        if (v != exclude) {
-            break;
+    if (n == 1) {
+        return exclude;
+    } else {
+        while (true) {
+            int v = rand() % n;
+            if (v != exclude) {
+                return v;
+            }
         }
-    } while (v == exclude);
-    return v;
+    }
 }
 
 GPNode* createRandomAI() {
@@ -30,9 +31,9 @@ GPNode* createRandomAI() {
     return createRandomTree(NEW_AI_MIN_DEPTH + rand() % (NEW_AI_MAX_DEPTH - NEW_AI_MIN_DEPTH));
 }
 
-vector<int> populationDropN(const unordered_map<int, int>& scores, unsigned int numDrop) {
+vector<int> populationDropN(const unordered_map<int, float>& scores, unsigned int numDrop) {
     assert(scores.size() >= numDrop);
-    multimap<int, int> sort;
+    multimap<float, int> sort;
     for (auto pair: scores) {
         sort.insert(make_pair(pair.second, pair.first));
     }
@@ -71,8 +72,7 @@ void randomMutation(vector<const GPNode*>& pop) {
     }
 }
 
-// stack rank
-vector<const GPNode*> evolveAmazonDotCom(const vector<const GPNode*>& oldPop, const unordered_map<int, int>& scores) {
+vector<const GPNode*> evolveStackRank(const vector<const GPNode*>& oldPop, const unordered_map<int, float>& scores) {
     const float GENERATION_PERCENT_DROP = 0.1;
     const int numDropped = int(oldPop.size() * GENERATION_PERCENT_DROP);
     vector<const GPNode*> newPop;
@@ -87,30 +87,36 @@ vector<const GPNode*> evolveAmazonDotCom(const vector<const GPNode*>& oldPop, co
 
 // Use 2 way crossover with num offspring proportional to score
 // Allow some to survive unmodified
-vector<const GPNode*> evolvePopulationCrossover(const vector<const GPNode*>& oldPop, const unordered_map<int, int>& scores) {
+vector<const GPNode*> evolvePopulationCrossover(const vector<const GPNode*>& oldPop, const unordered_map<int, float>& scores) {
     const float GENERATION_PERCENT_DROP = 0.05,
                 POPULATION_SIZE = oldPop.size();
 
     const int numDropped = int(POPULATION_SIZE * GENERATION_PERCENT_DROP);
     vector<int> survivors = populationDropN(scores, numDropped);
 
+    float minScore = min_element(scores.begin(), scores.end(),
+                              [&scores](const pair<int, float>& a, const pair<int, float>& b) {
+                                  return a.second < b.second;
+                              })->second;
     int totScore = accumulate(survivors.begin(), survivors.end(), 0,
-                              [&scores](int sum, int ai){ return sum + scores.find(ai)->second; });
+                              [&scores, minScore](int sum, int ai){ return sum + (scores.find(ai)->second - minScore); });
+    assert(totScore >= 0);
 
     vector<const GPNode*> newPop;
     for (auto ai: survivors) {
         if (newPop.size() >= oldPop.size()) {
             break;
         }
-        int score = scores.find(ai)->second;
-        int numOffspring = max((int)(((float)score / totScore) * survivors.size()), 1);
+        int score = scores.find(ai)->second - minScore;
+        assert(score >= 0);
+
+        int numOffspring = max((int)ceil(((float)score / totScore) * survivors.size()), 1);
         if (numOffspring > 1) {
             newPop.push_back(oldPop[ai]->clone());
-            --numOffspring;
         }
-        for (int i = 0; i < numOffspring && newPop.size() < POPULATION_SIZE; i++) {
+        for (int i = 0; i < numOffspring - 1 && newPop.size() < POPULATION_SIZE; i++) {
             newPop.push_back(swapRandomSubtree(oldPop[ai], 
-                                               oldPop[randExcluding(POPULATION_SIZE, ai)]));
+                                               oldPop[randExcluding(POPULATION_SIZE / 2, ai)]));
         }
     }
     while (newPop.size() < POPULATION_SIZE) {
@@ -124,7 +130,7 @@ vector<const GPNode*> evolvePopulationCrossover(const vector<const GPNode*>& old
 
 // Use 1 and 2 way crossover plus mutation
 // Allow some to survive unmodified
-vector<const GPNode*> evolvePopulationOperationsMix(const vector<const GPNode*>& oldPop, const unordered_map<int, int>& scores) {
+vector<const GPNode*> evolvePopulationOperationsMix(const vector<const GPNode*>& oldPop, const unordered_map<int, float>& scores) {
     static const float MUTATE_CHANCE_1_WAY_CROSSOVER = 1.0,
                        GENERATION_PERCENT_DROP = 0.05;
     const unsigned int POPULATION_SIZE = oldPop.size(),

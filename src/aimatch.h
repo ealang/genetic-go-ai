@@ -18,6 +18,6 @@ struct MatchResult {
     int numTurns;
 };
 
-MatchResult playAIMatch(const GPNode& black, const GPNode& white, int boardSize, int turnLimit);
+MatchResult playAIMatch(const GPNode& black, const GPNode& white, Color firstTurn, int boardSize, int turnLimit);
 
 #endif

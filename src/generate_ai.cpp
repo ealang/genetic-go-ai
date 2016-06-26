@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include "aimatch.h"
 #include "generate_ai.h"
 #include "gpnode.h"
@@ -22,12 +23,12 @@ vector<const GPNode*> createInitialPopulation(const TrainingOptions& options) {
 }
 
 struct LeaderBoard {
-    int score = 0;
+    float score = 0;
     GPNode* leader = nullptr;
 
-    void update(const vector<const GPNode*>& pop, const unordered_map<int, int>& scores) {
+    void update(const vector<const GPNode*>& pop, const unordered_map<int, float>& scores) {
         auto best = max_element(scores.begin(), scores.end(), 
-                        [](pair<int, int> a, pair<int, int> b) { return a.second < b.second; });
+                        [](pair<int, float> a, pair<int, float> b) { return a.second < b.second; });
 
         int i = best->first,
             iscore = best->second;
@@ -43,7 +44,8 @@ struct LeaderBoard {
 
 GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& options, std::function<void(const TrainingData&)> logger) {
     struct Result {
-        int ai, aiScore, benchmarkScore;
+        int ai;
+        float score;
     };
     LeaderBoard leader;
 
@@ -52,21 +54,22 @@ GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& op
     for (int generation = 0; generation < options.numGenerations; generation++) {
         for (int ai = 0; ai < options.populationSize; ai++) {
             queue.submit([ai, boardSize, maxTurnsPerGame, &pop, &options](){
-                int benchmarkScore = 0, aiScore = 0;
+                int totalScore = 0;
                 for (int game = 0; game < options.gamesPerEvaluation; game++) {
-                    auto result = playAIMatch(*options.benchmarkAI, *pop[ai], boardSize, maxTurnsPerGame);
-                    benchmarkScore += result.blackScore;
-                    aiScore += result.whiteScore;
+                    auto result = playAIMatch(*options.benchmarkAI, *pop[ai], (game % 2) ? BLACK : WHITE, boardSize, maxTurnsPerGame);
+                    totalScore += result.whiteScore - result.blackScore;
                 }
-                return Result{ai, aiScore, benchmarkScore};
+                return Result{ai, (float)totalScore / options.gamesPerEvaluation};
             });
         }
-        unordered_map<int, int> scores;
+
+        unordered_map<int, float> scores;
         for (int i = 0; i < options.populationSize; i++) {
             Result result = queue.get();
-            scores.insert(pair<int, int>(result.ai, result.aiScore));
-            logger(TrainingData{generation, result.ai, pop[result.ai], result.aiScore, result.benchmarkScore});
+            scores.insert(pair<int, float>(result.ai, result.score));
+            logger(TrainingData{generation, result.ai, pop[result.ai], result.score});
         }
+
         leader.update(pop, scores);
 
         vector<const GPNode*> nextGen = options.evolveNextGeneration(pop, scores);

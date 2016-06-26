@@ -30,12 +30,14 @@ def main():
         import re
         for line in line_iter:
             if line.startswith("training_data: "):
-                i, ai_score, b_score = re.match(r'^training_data: gen=(\d+) ai=\d+ \(size=\d+ depth=\d+\) ai score=(-?\d+) benchmark score=(-?\d+)$', line).groups()
-                yield (int(i), float(ai_score), float(b_score))
+                m = re.match(r'^training_data: gen=(\d+) ai=\d+ \(size=\d+ depth=\d+\) score=(-?\d+(\.)?(\d+)?)$', line)
+                i = m.group(1)
+                score = m.group(2)
+                yield (int(i), float(score))
 
     def load_series(series, line_iter):
-        for i, ai_score, b_score in parse_lines(line_iter):
-            series.push(i, ai_score - b_score)
+        for i, score in parse_lines(line_iter):
+            series.push(i, score)
 
     def plot_series(series, color_code, label=None):
         pyplot.plot(series.data_x, series.data_y, '.' + color_code)

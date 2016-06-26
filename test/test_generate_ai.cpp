@@ -16,7 +16,7 @@ TEST(TestGenerateAI, LogsTrainingInformation) {
     options.gamesPerEvaluation = 1;
     options.benchmarkAI = &benchmark;
     options.createNewAI = [](){ return new RandomIntNode(0, 10); };
-    options.evolveNextGeneration = [](const vector<const GPNode*>& pop, const unordered_map<int, int>&) {
+    options.evolveNextGeneration = [](const vector<const GPNode*>& pop, const unordered_map<int, float>&) {
         vector<const GPNode*> newPop;
         for (auto ai: pop) {
             newPop.push_back(ai->clone());
