@@ -8,6 +8,7 @@
 #include "gpnodes_experimental.h"
 #include "gptree.h"
 #include "rlutil.h"
+#include "scoring_algs.h"
 
 using namespace std;
 
@@ -95,19 +96,43 @@ void logTrainingData(const TrainingData& data) {
          << " score=" << data.score << endl;
 }
 
-GPNode* trainAI(int boardSize) {
-    RandomIntNode benchmarkAI(0, 10000);
 
+GPNode* trainAI(int boardSize) {
+    /*
+    bool mine = true;
+    auto benchmark =
+		new PlusNode(
+			 new MultiplyNode(new PlayerScoreDeltaNode(), new IntConstNode(5)),
+			 new PlusNode(
+				new MultiplyNode(new StoneSpacingDeltaNode(), new IntConstNode(-1)),
+				new MultiplyNode(
+					 new IntConstNode(5),
+					 new PlusNode(
+						 new PlusNode(
+							 new IntIfNode(new CanBeCapturedNode(), new IntConstNode(-5), new IntConstNode(0)),
+							 new IntIfNode(new CanCaptureNode(), new IntConstNode(5), new IntConstNode(0))),
+						 new PlusNode(
+							 new PlusNode(
+								 new AdjacentStonesNode(mine, true),
+								 new AdjacentStonesNode(!mine, true)),
+							 new PlusNode(
+								 new LibertiesDeltaNode(mine),
+								 new MultiplyNode(new LibertiesDeltaNode(!mine), new IntConstNode(-1))))))));
+     */
+
+    //BenchmarkScore scoring(benchmark);
+    CompetitiveScore scoring;
+    
     TrainingOptions options;
     options.populationSize = 50;
     options.numGenerations = 50;
-    options.gamesPerEvaluation = 20;
-    options.benchmarkAI = &benchmarkAI;
     options.createNewAI = createRandomAI;
-    options.evolveNextGeneration = evolvePopulationCrossover;
+    options.evolveFunc = evolvePopulationCrossover;
+    options.scoreFunc = [&scoring](int boardSize, const vector<const GPNode*>& pop) {
+        return scoring(boardSize, pop);
+    };
 
-    int maxTurnsPerGame = boardSize * boardSize / 2;
-    return generateAI(boardSize, maxTurnsPerGame, options, logTrainingData);
+    return generateAI(boardSize, options, logTrainingData);
 }
 
 int main(int arglen, char **argv) {

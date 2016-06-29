@@ -3,7 +3,7 @@ SHELL := /bin/bash
 MAIN_LIBS = -lpthread -pthread
 TEST_LIBS = -lgtest -lgtest_main $(MAIN_LIBS)
 
-MAIN_SRC = $(wildcard src/*.cpp src/board/*.cpp src/gpnode/*.cpp)
+MAIN_SRC = $(wildcard src/*.cpp src/board/*.cpp src/gpnode/*.cpp src/evolution/*.cpp)
 TEST_SRC = $(wildcard test/*.cpp)
 
 TO_OBJS = $(patsubst %.cpp, obj/%.o, $(1))
@@ -30,15 +30,13 @@ mainexe: $(MAIN_OBJS)
 	@g++ -o $@ $^ $(MAIN_LIBS)
 
 obj/%.o: %.cpp
-	@[ -a src/rlutil.h ] || wget --quiet https://raw.githubusercontent.com/tapio/rlutil/ca895e114fa8fe32913fb9e1cb30fc86bbd40c6b/rlutil.h -O src/rlutil.h
 	@mkdir -p $(dir $@)
-	@g++ -g -Wall -Wextra -Werror -Wfatal-errors -c -std=c++1y -I src -I src/board -I src/gpnode -o $@ $^
+	@g++ -g -Wall -Wextra -Werror -Wfatal-errors -c -std=c++1y -I src -I src/evolution -I src/board -I src/gpnode -o $@ $^
 
 .PHONY: clean
 clean:
 	@rm -rf obj
 	@rm -f mainexe testexe tags
-	@rm -f src/rlutil.h
 
 .PHONY: ctags
 ctags:

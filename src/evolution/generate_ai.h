@@ -19,19 +19,15 @@ struct TrainingOptions {
     int populationSize;
     // number of ai generations to run
     int numGenerations;
-    // num games in a row to play when evaluating an ai
-    int gamesPerEvaluation; 
-    // standard compeditor ai
-    const GPNode* benchmarkAI;
     // initialize a new ai
     std::function<GPNode*()> createNewAI;
+    // score generation
+    std::function<std::unordered_map<int, float>(int, const std::vector<const GPNode*>&)> scoreFunc;
     // produce next generation
-    std::function<
-        std::vector<const GPNode*>
-        (const std::vector<const GPNode*>&, const std::unordered_map<int, float>&)>
-            evolveNextGeneration;
+    std::function<std::vector<const GPNode*>
+        (const std::vector<const GPNode*>&, const std::unordered_map<int, float>&)> evolveFunc;
 };
 
-GPNode* generateAI(int boardSize, int maxTurnsPerGame, const TrainingOptions& options, std::function<void(const TrainingData&)> logger);
+GPNode* generateAI(int boardSize, const TrainingOptions& options, std::function<void(const TrainingData&)> logger);
 
 #endif

@@ -13,10 +13,9 @@ TEST(TestGenerateAI, LogsTrainingInformation) {
     TrainingOptions options;
     options.populationSize = 1;
     options.numGenerations = 1;
-    options.gamesPerEvaluation = 1;
-    options.benchmarkAI = &benchmark;
     options.createNewAI = [](){ return new RandomIntNode(0, 10); };
-    options.evolveNextGeneration = [](const vector<const GPNode*>& pop, const unordered_map<int, float>&) {
+    options.scoreFunc = [](int, const vector<const GPNode*>&){ return unordered_map<int, float>(); };
+    options.evolveFunc = [](const vector<const GPNode*>& pop, const unordered_map<int, float>&) {
         vector<const GPNode*> newPop;
         for (auto ai: pop) {
             newPop.push_back(ai->clone());
@@ -35,7 +34,7 @@ TEST(TestGenerateAI, LogsTrainingInformation) {
         data.ai->get(Context{0, 0, WHITE, b, b});
     };
 
-    GPNode* ai = generateAI(boardSize, 1, options, logger);
+    GPNode* ai = generateAI(boardSize, options, logger);
     ASSERT_TRUE(loggerCalled);
 
     ai->get(Context{0, 0, WHITE, b, b});
