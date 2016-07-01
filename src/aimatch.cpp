@@ -5,7 +5,8 @@
 #include "gpnode_context.h"
 #include "board_intel.h"
 
-Color nextTurn(Color c) { return c == BLACK ? WHITE : BLACK; }
+// thrown if no move is possible
+struct NoMoveAvailable {};
 
 bool Move::operator!=(const Move& other) const {
     return !(x == other.x && y == other.y);
@@ -33,7 +34,7 @@ Move getBestMove(const Board& board, const GPNode& aiLogic, Color color) {
         }
     }
     if (!moved) {
-        throw std::runtime_error("No spaces available to play");
+        throw NoMoveAvailable();
     }
     return bestmove;
 }
@@ -43,9 +44,13 @@ MatchResult playAIMatch(const GPNode& black, const GPNode& white, Color turn, in
 
     int nturns = 0;
     while ((nturns < turnLimit || turnLimit == -1) && nturns < boardSize * boardSize) {
-        auto move = getBestMove(board, turn == BLACK ? black : white, turn);
-        board.set(move.x, move.y, turn);
-        turn = nextTurn(turn);
+        try {
+            auto move = getBestMove(board, turn == BLACK ? black : white, turn);
+            board.set(move.x, move.y, turn);
+        } catch (const NoMoveAvailable&) {
+            break;
+        }
+        turn = otherColor(turn);
         ++nturns;
     }
     return MatchResult {board.score(BLACK),
