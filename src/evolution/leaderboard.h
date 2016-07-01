@@ -3,27 +3,23 @@
 
 #include <vector>
 #include <unordered_map>
-#include <utility>
-#include <algorithm>
 
-struct LeaderBoard {
-    float score = 0;
+class GPNode;
+
+class LeaderBoard {
+    LeaderBoard(const LeaderBoard&) = delete;
+    LeaderBoard& operator=(const LeaderBoard&) = delete;
+
+    float leaderScore;
     GPNode* leader = nullptr;
-
-    void update(const std::vector<const GPNode*>& pop, const std::unordered_map<int, float>& scores) {
-        auto best = max_element(scores.begin(), scores.end(), 
-                        [](std::pair<int, float> a, std::pair<int, float> b) { return a.second < b.second; });
-
-        int i = best->first,
-            iscore = best->second;
-        if (iscore > score || leader == nullptr) {
-            score = iscore;
-            if (leader) {
-                cleanupTree(leader);
-            }
-            leader = pop[i]->clone();
-        }
-    };
+    std::vector<const GPNode*> roundLeaders;
+public:
+    LeaderBoard();
+    virtual ~LeaderBoard();
+    void update(const std::vector<const GPNode*>& pop, const std::unordered_map<int, float>& scores);
+    const GPNode* alltime() const;
+    const GPNode* lastround() const;
+    const GPNode* round(int) const;
 };
 
 #endif

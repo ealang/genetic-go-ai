@@ -37,5 +37,5 @@ GPNode* generateAI(int boardSize, const TrainingOptions& options, function<void(
         pop = nextGen;
     }
     cleanupPopulation(pop);
-    return leader.leader;
+    return leader.lastround()->clone();
 }
