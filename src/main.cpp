@@ -4,8 +4,6 @@
 #include "board.h"
 #include "evolution_algs.h"
 #include "generate_ai.h"
-#include "gpnode.h"
-#include "gpnodes_experimental.h"
 #include "gptree.h"
 #include "rlutil.h"
 #include "scoring_algs.h"
@@ -27,10 +25,8 @@ void printFancyBoard(const Board& board) {
             printBorderCell(i);
         }
     };
-    auto printStone = [](int x, int y, Color stone) {
-        static int colors[] = {rlutil::BLACK, rlutil::BLACK, rlutil::WHITE};
-        int bgColor = ((y + x) % 2) ? rlutil::GREY : rlutil::CYAN;
-        rlutil::setBackgroundColor(bgColor);
+    auto printStone = [](Color stone) {
+        static int colors[] = {rlutil::BLACK, rlutil::BLACK, rlutil::RED};
         rlutil::setColor(colors[stone]);
         cout << (stone == NONE ? ' ' : 'o');
     };
@@ -41,8 +37,9 @@ void printFancyBoard(const Board& board) {
     cout << endl;
     for (int y = 0; y < size; y++) {
         printBorderCell(y + 1);
+        rlutil::setBackgroundColor(rlutil::GREY);
         for (int x = 0; x < size; x++) {
-            printStone(x, y, board.get(x, y));
+            printStone(board.get(x, y));
         }
         printBorderCell(y + 1);
         cout << endl;
@@ -55,26 +52,24 @@ void printFancyBoard(const Board& board) {
 
 void playInteractiveVsAI(int boardSize, const GPNode* ai) {
     while (true) {
-        Color turn = WHITE;
+        Color turn = BLACK;
         Board b(boardSize);
         int nturns = (int)(boardSize * boardSize * 0.8);
         for (int i = 0; i < nturns; i++) {
             cout << "move " << i + 1 << " of " << nturns << endl;
             int x, y;
-            if (turn == WHITE) {
+            if (turn == BLACK) {
                 auto move = getBestMove(b, *ai, turn);
-                cout << "ai move: " << move.x + 1 << " " << move.y + 1 << endl;
-                x = move.x;
-                y = move.y;
+                x = move.x + 1;
+                y = move.y + 1;
+                cout << "ai move: " << x << " " << y << endl;
             } else {
                 cout << "your move: ";
                 cin >> x;
                 cin >> y;
-                --x;
-                --y;
             }
             try {
-                b.set(x, y, turn);
+                b.set(x - 1, y - 1, turn);
             } catch (const runtime_error& e) {
                 cout << e.what() << endl;
             } catch (const KoRuleViolated&) {
@@ -82,10 +77,10 @@ void playInteractiveVsAI(int boardSize, const GPNode* ai) {
             }
 
             printFancyBoard(b);
-            turn = turn == BLACK ? WHITE : BLACK;
+            turn = otherColor(turn);
         }
-        cout << "ai score: " << b.score(WHITE) << endl <<
-                "your score: " << b.score(BLACK) << endl;
+        cout << "ai score: " << b.score(BLACK) << endl <<
+                "your score: " << b.score(WHITE) << endl;
     }
 }
 
@@ -96,35 +91,11 @@ void logTrainingData(const TrainingData& data) {
          << " score=" << data.score << endl;
 }
 
-
 GPNode* trainAI(int boardSize) {
-    /*
-    bool mine = true;
-    auto benchmark =
-		new PlusNode(
-			 new MultiplyNode(new PlayerScoreDeltaNode(), new IntConstNode(5)),
-			 new PlusNode(
-				new MultiplyNode(new StoneSpacingDeltaNode(), new IntConstNode(-1)),
-				new MultiplyNode(
-					 new IntConstNode(5),
-					 new PlusNode(
-						 new PlusNode(
-							 new IntIfNode(new CanBeCapturedNode(), new IntConstNode(-5), new IntConstNode(0)),
-							 new IntIfNode(new CanCaptureNode(), new IntConstNode(5), new IntConstNode(0))),
-						 new PlusNode(
-							 new PlusNode(
-								 new AdjacentStonesNode(mine, true),
-								 new AdjacentStonesNode(!mine, true)),
-							 new PlusNode(
-								 new LibertiesDeltaNode(mine),
-								 new MultiplyNode(new LibertiesDeltaNode(!mine), new IntConstNode(-1))))))));
-     */
-
-    //BenchmarkScore scoring(benchmark);
     CompetitiveScore scoring;
     
     TrainingOptions options;
-    options.populationSize = 50;
+    options.populationSize = 100;
     options.numGenerations = 50;
     options.createNewAI = createRandomAI;
     options.evolveFunc = evolvePopulationCrossover;
