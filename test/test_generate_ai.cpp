@@ -8,14 +8,27 @@
 using namespace std;
 
 TEST(TestGenerateAI, LogsTrainingInformation) {
-    RandomIntNode benchmark(0, 1000);
+    bool calledEvolveScore = false,
+         calledCrossValidateScore = false,
+         calledEvolveFunc = false,
+         calledLogger = false;
 
     TrainingOptions options;
     options.populationSize = 1;
     options.numGenerations = 1;
     options.createNewAI = [](){ return new RandomIntNode(0, 10); };
-    options.scoreFunc = [](int, const vector<const GPNode*>&){ return unordered_map<int, float>(); };
-    options.evolveFunc = [](const vector<const GPNode*>& pop, const unordered_map<int, float>&) {
+    options.evScoreFunc = [&calledEvolveScore](int, const vector<const GPNode*>&){
+        calledEvolveScore = true;
+        return unordered_map<int, float>{{0, 10}};
+    };
+    options.cvScoreFunc = [&calledCrossValidateScore](int, const vector<const GPNode*>&){
+        calledCrossValidateScore = true;
+        return unordered_map<int, float>{{0, 20}};
+    };
+    options.evolveFunc = [&calledEvolveFunc](const vector<const GPNode*>& pop, const unordered_map<int, float>& scores) {
+        calledEvolveFunc = true;
+        assert(10 == scores.find(0)->second);
+
         vector<const GPNode*> newPop;
         for (auto ai: pop) {
             newPop.push_back(ai->clone());
@@ -25,17 +38,19 @@ TEST(TestGenerateAI, LogsTrainingInformation) {
 
     int boardSize = 9;
     Board b(boardSize);
-
-    bool loggerCalled = false;
-    auto logger = [&loggerCalled, &b](const TrainingData& data){
+    auto logger = [&calledLogger, &b](const TrainingData& data){
         ASSERT_EQ(0, data.generationNum);
         ASSERT_EQ(0, data.aiNum);
-        loggerCalled = true;
+        ASSERT_EQ(20, data.score);
+        calledLogger = true;
         data.ai->get(Context{0, 0, WHITE, b, b});
     };
 
     GPNode* ai = generateAI(boardSize, options, logger);
-    ASSERT_TRUE(loggerCalled);
+    ASSERT_TRUE(calledEvolveFunc);
+    ASSERT_TRUE(calledCrossValidateScore);
+    ASSERT_TRUE(calledEvolveScore);
+    ASSERT_TRUE(calledLogger);
 
     ai->get(Context{0, 0, WHITE, b, b});
 

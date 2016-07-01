@@ -21,8 +21,10 @@ struct TrainingOptions {
     int numGenerations;
     // initialize a new ai
     std::function<GPNode*()> createNewAI;
-    // score generation
-    std::function<std::unordered_map<int, float>(int, const std::vector<const GPNode*>&)> scoreFunc;
+    // evolution score
+    std::function<std::unordered_map<int, float>(int, const std::vector<const GPNode*>&)> evScoreFunc;
+    // cross validation score 
+    std::function<std::unordered_map<int, float>(int, const std::vector<const GPNode*>&)> cvScoreFunc;
     // produce next generation
     std::function<std::vector<const GPNode*>
         (const std::vector<const GPNode*>&, const std::unordered_map<int, float>&)> evolveFunc;

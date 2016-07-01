@@ -9,7 +9,9 @@ int maxTurnsForGame(int boardSize) {
     return int(boardSize * boardSize * 0.7);
 }
 
-BenchmarkScore::BenchmarkScore(const GPNode* benchmark): benchmark(benchmark) {}
+BenchmarkScore::BenchmarkScore(int gamesPerEvaluation, const GPNode* benchmark): 
+    gamesPerEvaluation(gamesPerEvaluation),
+    benchmark(benchmark) {}
 
 unordered_map<int, float> BenchmarkScore::operator()(int boardSize, const vector<const GPNode*>& pop) {
     for (unsigned int ai = 0; ai < pop.size(); ai++) {
@@ -31,6 +33,9 @@ unordered_map<int, float> BenchmarkScore::operator()(int boardSize, const vector
     }
     return scores;
 }
+
+CompetitiveScore::CompetitiveScore(int gamesPerEvaluation):
+    gamesPerEvaluation(gamesPerEvaluation) {}
 
 std::unordered_map<int, float> CompetitiveScore::operator()(int boardSize, const std::vector<const GPNode*>& pop) {
     for (unsigned int ai = 0; ai < pop.size(); ai++) {

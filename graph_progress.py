@@ -30,7 +30,7 @@ def main():
         import re
         for line in line_iter:
             if line.startswith("training_data: "):
-                m = re.match(r'^training_data: gen=(\d+) ai=\d+ \(size=\d+ depth=\d+\) score=(-?\d+(\.)?(\d+)?)$', line)
+                m = re.match(r'^training_data: gen=(\d+) ai=\d+ \(size=\d+ depth=\d+\) score=(.*?)$', line)
                 i = m.group(1)
                 score = m.group(2)
                 yield (int(i), float(score))

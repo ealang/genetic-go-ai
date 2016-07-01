@@ -4,6 +4,7 @@
 #include "board.h"
 #include "evolution_algs.h"
 #include "generate_ai.h"
+#include "gpnodes_experimental.h"
 #include "gptree.h"
 #include "rlutil.h"
 #include "scoring_algs.h"
@@ -92,15 +93,21 @@ void logTrainingData(const TrainingData& data) {
 }
 
 GPNode* trainAI(int boardSize) {
-    CompetitiveScore scoring;
+    CompetitiveScore evScoring(30);
+
+    RandomIntNode benchmarkAI(0, 10000);
+    BenchmarkScore cvScoring(4, &benchmarkAI);
     
     TrainingOptions options;
     options.populationSize = 100;
-    options.numGenerations = 50;
+    options.numGenerations = 25;
     options.createNewAI = createRandomAI;
     options.evolveFunc = evolvePopulationCrossover;
-    options.scoreFunc = [&scoring](int boardSize, const vector<const GPNode*>& pop) {
-        return scoring(boardSize, pop);
+    options.evScoreFunc = [&evScoring](int boardSize, const vector<const GPNode*>& pop) {
+        return evScoring(boardSize, pop);
+    };
+    options.cvScoreFunc = [&cvScoring](int boardSize, const vector<const GPNode*>& pop) {
+        return cvScoring(boardSize, pop);
     };
 
     return generateAI(boardSize, options, logTrainingData);

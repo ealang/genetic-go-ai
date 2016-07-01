@@ -43,7 +43,7 @@ MatchResult playAIMatch(const GPNode& black, const GPNode& white, Color turn, in
     Board board(boardSize);
 
     int nturns = 0;
-    while ((nturns < turnLimit || turnLimit == -1) && nturns < boardSize * boardSize) {
+    while (nturns < turnLimit) {
         try {
             auto move = getBestMove(board, turn == BLACK ? black : white, turn);
             board.set(move.x, move.y, turn);
@@ -54,6 +54,5 @@ MatchResult playAIMatch(const GPNode& black, const GPNode& white, Color turn, in
         ++nturns;
     }
     return MatchResult {board.score(BLACK),
-                        board.score(WHITE),
-                        nturns};
+                        board.score(WHITE)};
 }
