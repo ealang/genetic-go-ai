@@ -38,7 +38,7 @@ int Board::captureCount(Color c) const {
 }
 
 int Board::score(Color c) const {
-    return territoryCount(c) + captureCount(c);
+    return territoryCount(c) - captureCount(otherColor(c));
 }
 
 string Board::toString() const {

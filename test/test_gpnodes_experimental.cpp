@@ -148,5 +148,5 @@ TEST_F(GPNodesExperimentalTest, DetectScoreChanges) {
     board.set(0, 1, BLACK);
     board.set(0, 0, WHITE);
     board.set(4, 4, WHITE);
-    EXPECT_EQ(2, PlayerScoreDeltaNode().get(set(1, 0, BLACK)));
+    EXPECT_EQ(1, PlayerScoreDeltaNode().get(set(1, 0, BLACK)));
 }

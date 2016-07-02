@@ -142,7 +142,7 @@ TEST(BoardTest, CalculatesCapturesFromLastPlacedStone) {
     EXPECT_EQ(NONE, b.get(0, 1));
 }
 
-TEST(BoardTest, CalculatesPlayerScoreAsTerritoryPlusCaptures) {
+TEST(BoardTest, CalculatesPlayerScoreAsTerritoryMinusCaptures) {
     Board b(4);
     b.set(0, 0, BLACK);
     b.set(3, 3, BLACK);
@@ -154,8 +154,8 @@ TEST(BoardTest, CalculatesPlayerScoreAsTerritoryPlusCaptures) {
     ASSERT_EQ(1, b.captureCount(WHITE));
     ASSERT_EQ(0, b.territoryCount(BLACK));
     ASSERT_EQ(1, b.territoryCount(WHITE));
-    ASSERT_EQ(2, b.score(WHITE));
-    ASSERT_EQ(0, b.score(BLACK));
+    ASSERT_EQ(1, b.score(WHITE));
+    ASSERT_EQ(-1, b.score(BLACK));
 }
 
 TEST(BoardTest, RuleOfKoPreventsImmediateRecapture) {

@@ -8,8 +8,8 @@
 TEST(AIMatchTest, CanPlayGame) {
     IntConstNode ai(1);
     auto result = playAIMatch(ai, ai, BLACK, 3, 9);
-    ASSERT_EQ(9, result.blackScore);
-    ASSERT_EQ(1, result.whiteScore);
+    ASSERT_EQ(4, result.blackScore);
+    ASSERT_EQ(-4, result.whiteScore);
 }
 
 TEST(AIMatchTest, CanGetMove) {

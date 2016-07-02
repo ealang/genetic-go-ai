@@ -29,7 +29,7 @@ void printFancyBoard(const Board& board) {
     auto printStone = [](Color stone) {
         static int colors[] = {rlutil::BLACK, rlutil::BLACK, rlutil::RED};
         rlutil::setColor(colors[stone]);
-        cout << (stone == NONE ? ' ' : 'o');
+        cout << (stone == NONE ? ' ' : 'O');
     };
 
     rlutil::saveDefaultColor();
@@ -100,7 +100,7 @@ GPNode* trainAI(int boardSize) {
     
     TrainingOptions options;
     options.populationSize = 100;
-    options.numGenerations = 25;
+    options.numGenerations = 50;
     options.createNewAI = createRandomAI;
     options.evolveFunc = evolvePopulationCrossover;
     options.evScoreFunc = [&evScoring](int boardSize, const vector<const GPNode*>& pop) {
@@ -114,7 +114,7 @@ GPNode* trainAI(int boardSize) {
 }
 
 int main(int arglen, char **argv) {
-    const int boardSize = 6;
+    const int boardSize = 7;
     GPNode* ai = trainAI(boardSize);
 
     cout << ai->toString() << endl;
