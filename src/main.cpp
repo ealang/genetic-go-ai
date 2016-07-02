@@ -86,10 +86,15 @@ void playInteractiveVsAI(int boardSize, const GPNode* ai) {
 }
 
 void logTrainingData(const TrainingData& data) {
-    cout << "training_data:"
-         << " gen=" << data.generationNum
-         << " ai=" << data.aiNum << " (size=" << treeNodeCount(data.ai) << " depth=" << treeDepth(data.ai) << ")"
-         << " score=" << data.score << endl;
+    cout << "training_data " <<
+        "{" << 
+            "\"ai\": " << data.aiNum << ", " <<
+            "\"gen\": " << data.generationNum << ", " <<
+            "\"size\": " << treeNodeCount(data.ai) << ", " <<
+            "\"depth\": " << treeDepth(data.ai) << ", " <<
+            "\"cv_score\": " << data.score << ", " <<
+            "\"program\": \"" << data.ai->toString() << "\"" <<
+        "}" << endl;
 }
 
 GPNode* trainAI(int boardSize) {

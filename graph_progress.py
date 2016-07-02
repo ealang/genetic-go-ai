@@ -1,4 +1,4 @@
-class Series:
+class ScoreTrend:
     def __init__(self):
         self._imax = {}
         self.data_x = []
@@ -21,41 +21,71 @@ class Series:
         return [self._imax[i] for i in self.max_x]
 
 
+class NodeRank:
+    def __init__(self):
+        from collections import defaultdict
+        self._node_count = defaultdict(int)
+        self._node_score_sum = defaultdict(int)
+
+    def push(self, program, score):
+        for n in self._parse_nodes(program):
+            self._node_count[n] += 1
+            self._node_score_sum[n] += score
+
+    @property
+    def scores(self):
+        return [{'node': node,
+                 'score': self._node_score_sum[node] / float(self._node_count[node]),
+                 'count': self._node_count[node]}
+                for node in self._node_count.keys()]
+
+    @staticmethod
+    def _parse_nodes(program):
+        import re
+        return set(re.findall(r'(\w+)\(', program))
+
+
 def main():
     import sys
     from matplotlib import pyplot
     from itertools import cycle
 
-    def parse_lines(line_iter):
-        import re
-        for line in line_iter:
-            if line.startswith("training_data: "):
-                m = re.match(r'^training_data: gen=(\d+) ai=\d+ \(size=\d+ depth=\d+\) score=(.*?)$', line)
-                i = m.group(1)
-                score = m.group(2)
-                yield (int(i), float(score))
+    def print_node_rank(noderank):
+        for i, row in enumerate(sorted(noderank.scores, key=lambda p: p['score'], reverse=True)):
+            print('{0:<3} {1:<30} {2:4} {3:10.2}'.format(i, row['node'], row['count'], row['score']))
 
-    def load_series(series, line_iter):
-        for i, score in parse_lines(line_iter):
-            series.push(i, score)
+    def ingest_log(trend, noderank, line_iter):
+        def parse_lines(line_iter):
+            import json
+            for line in line_iter:
+                if line.startswith('training_data '):
+                    yield json.loads(line[line.find('{'):])
+        for data in parse_lines(line_iter):
+            noderank.push(data['program'], data['cv_score'])
+            trend.push(data['gen'], data['cv_score'])
 
-    def plot_series(series, color_code, label=None):
-        pyplot.plot(series.data_x, series.data_y, '.' + color_code)
-        pyplot.plot(series.max_x, series.max_y, color_code, linewidth=2, label=label)
+    def plot_trend(trend, color_code, label=None):
+        pyplot.plot(trend.data_x, trend.data_y, '.' + color_code)
+        pyplot.plot(trend.max_x, trend.max_y, color_code, linewidth=2, label=label)
 
     color_codes = ['b', 'r', 'g', 'm', 'c', 'k']
     if len(sys.argv) == 1:
-        series = Series()
-        load_series(series, sys.stdin)
-        plot_series(series, color_codes[0])
-
+        trend = ScoreTrend()
+        noderank = NodeRank()
+        ingest_log(trend, noderank, sys.stdin)
+        print_node_rank(noderank)
+        plot_trend(trend, color_codes[0])
     else:
         filenames = sys.argv[1:]
         for filename, color_code in zip(filenames, cycle(color_codes)):
-            series = Series()
+            trend = ScoreTrend()
+            noderank = NodeRank()
             with open(filename) as fd:
-                load_series(series, fd)
-            plot_series(series, color_code, filename)
+                ingest_log(trend, noderank, fd)
+
+            print(filename)
+            print_node_rank(noderank)
+            plot_trend(trend, color_code, filename)
         pyplot.legend()
 
     pyplot.xlabel('iteration')
