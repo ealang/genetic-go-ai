@@ -1,6 +1,10 @@
 # Genetic AI for Go
 
-Work in progress AI for Go using genetic programming.
+Genetic programming is used to train a function that can score a board. To make a move, the AI player scores all possible moves and selects the highest scoring move.
+
+The bots can easily defeat random moving players, but are not very human competitive. An enhancement to improve performance would be to look ahead at future moves instead of only considering the current move.
+
+The program creates an initial group of randomly initialized bots, and has pluggable algorithms for scoring and evolving each generation of bots. Bots tended to overspecialize when scored against a static benchmark player, but I found scoring using peer tournaments produced more well rounded and human competitive bots.
 
 # Instructions
 
