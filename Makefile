@@ -3,7 +3,7 @@ SHELL := /bin/bash
 MAIN_LIBS = -lpthread -pthread
 TEST_LIBS = -lgtest -lgtest_main $(MAIN_LIBS)
 
-MAIN_SRC = $(wildcard src/*.cpp src/board/*.cpp src/gpnode/*.cpp src/evolution/*.cpp)
+MAIN_SRC = $(wildcard src/*.cpp src/board/*.cpp src/gpnode/*.cpp src/evolution/*.cpp src/ui/*.cpp)
 TEST_SRC = $(wildcard test/*.cpp)
 
 TO_OBJS = $(patsubst %.cpp, obj/%.o, $(1))
@@ -31,7 +31,7 @@ mainexe: $(MAIN_OBJS)
 
 obj/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	@g++ -g -Wall -Wextra -Werror -Wfatal-errors -c -std=c++1y -I src -I src/evolution -I src/board -I src/gpnode -o $@ $^
+	@g++ -g -Wall -Wextra -Werror -Wfatal-errors -c -std=c++1y -I src -I src/ui -I src/evolution -I src/board -I src/gpnode -o $@ $^
 
 .PHONY: clean
 clean:
