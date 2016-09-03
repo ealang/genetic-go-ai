@@ -21,7 +21,7 @@ class TaskQueue {
     std::queue<std::future<T>> resultsQueue;
 
     std::mutex taskMutex;
-    std::condition_variable taskCondition;
+    std::condition_variable taskConditionVar;
 
     bool terminateRequested;
 public:
@@ -33,7 +33,7 @@ public:
                 std::packaged_task<T(void)> task;
                 {
                     std::unique_lock<std::mutex> lock(taskMutex);
-                    taskCondition.wait(lock, [this]() {
+                    taskConditionVar.wait(lock, [this]() {
                         return !taskQueue.empty() || terminateRequested;
                     });
                     if (terminateRequested) {
@@ -54,8 +54,11 @@ public:
     }
 
     ~TaskQueue() {
-        terminateRequested = true;
-        taskCondition.notify_all();
+        {
+            std::lock_guard<std::mutex> lock(taskMutex);
+            terminateRequested = true;
+        }
+        taskConditionVar.notify_all();
         for (auto& thread: threadPool) {
             thread.join();
         }
@@ -68,7 +71,7 @@ public:
             std::lock_guard<std::mutex> lock(taskMutex);
             taskQueue.emplace(std::move(task));
         }
-        taskCondition.notify_one();
+        taskConditionVar.notify_one();
     }
 
     T get() {
