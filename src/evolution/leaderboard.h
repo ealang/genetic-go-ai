@@ -10,7 +10,7 @@ class LeaderBoard {
     LeaderBoard(const LeaderBoard&) = delete;
     LeaderBoard& operator=(const LeaderBoard&) = delete;
 
-    float leaderScore;
+    float leaderScore = 0;
     GPNode* leader = nullptr;
     std::vector<const GPNode*> roundLeaders;
 public:
