@@ -7,6 +7,7 @@
 #include "board_iter.h"
 #include "gpnode_context.h"
 #include "gpnodes_experimental.h"
+#include "ts_rand.h"
 
 using namespace std;
 
@@ -206,7 +207,7 @@ string IntConstNode::toStringImpl() const {
 RandomIntNode::RandomIntNode(int min, int max): min(min), max(max) { }
 
 int RandomIntNode::getImpl(const Context&) const {
-    return min + rand() % (max - min + 1);
+    return min + ts_rand() % (max - min + 1);
 }
 
 GPNode* RandomIntNode::cloneImpl() const {
@@ -410,8 +411,8 @@ string StoneSpacingDeltaNode::toStringImpl() const {
 
 GPNode* createRandomNode(GPType type, int curDepth, int maxDepth) {
     static const int CONST_MIN = -10, CONST_MAX = 10;
-    static auto randint = [](int min, int max){ return min + rand() % (max - min); };
-    static auto randbool = [](){ return (bool)(rand() % 2); };
+    static auto randint = [](int min, int max){ return min + ts_rand() % (max - min); };
+    static auto randbool = [](){ return (bool)(ts_rand() % 2); };
     static vector<function<GPNode*(void)>> intTermFac = {
         [](){ return new IntConstNode(randint(CONST_MIN, CONST_MAX + 1)); },
         [](){ return new IntConstNode(randint(0, 2)); },

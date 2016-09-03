@@ -2,6 +2,7 @@
 #include "aimatch.h"
 #include "gpnode.h"
 #include "gptree.h"
+#include "ts_rand.h"
 
 using namespace std;
 
@@ -41,7 +42,7 @@ std::unordered_map<int, float> CompetitiveScore::operator()(int boardSize, const
     for (unsigned int ai = 0; ai < pop.size(); ai++) {
         for (int game = 0; game < gamesPerEvaluation; game++) {
             queue.submit([ai, boardSize, game, &pop, this](){
-                auto result = playAIMatch(*pop[rand() % pop.size()], *pop[ai],
+                auto result = playAIMatch(*pop[ts_rand() % pop.size()], *pop[ai],
                                           (game % 2) ? BLACK : WHITE,
                                           boardSize, maxTurnsForGame(boardSize));
                 float score = result.whiteScore - result.blackScore;

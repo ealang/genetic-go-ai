@@ -4,6 +4,7 @@
 #include <utility>
 #include "gptree.h"
 #include "gpnodes_experimental.h"
+#include "ts_rand.h"
 
 using namespace std;
 
@@ -117,13 +118,13 @@ GPNode* treeReplaceAt(const GPNode* tree1, int num, const GPNode* tree2) {
 }
 
 pair<GPNode*, GPNode*> swapRandomSubtrees(const GPNode* tree1, const GPNode* tree2) {
-    int sub1 = rand() % treeNodeCount(tree1);
+    int sub1 = ts_rand() % treeNodeCount(tree1);
     const GPNode *subTree1 = treeGetNodeNum(tree1, sub1);
     GPType type = subTree1->getOutputType();
 
     int compatibleCount = treeNodeCount(tree2, type);
     if (compatibleCount > 0) {
-        auto p = treeGetNodeNum(tree2, rand() % compatibleCount, type);
+        auto p = treeGetNodeNum(tree2, ts_rand() % compatibleCount, type);
         const GPNode* subTree2 = p.first;
         int sub2 = p.second;
 
@@ -135,13 +136,13 @@ pair<GPNode*, GPNode*> swapRandomSubtrees(const GPNode* tree1, const GPNode* tre
 }
 
 GPNode* swapRandomSubtree(const GPNode* tree1, const GPNode* tree2) {
-    int sub1 = rand() % treeNodeCount(tree1);
+    int sub1 = ts_rand() % treeNodeCount(tree1);
     const GPNode *subTree1 = treeGetNodeNum(tree1, sub1);
     GPType type = subTree1->getOutputType();
 
     int compatibleCount = treeNodeCount(tree2, type);
     if (compatibleCount > 0) {
-        int sub2 = treeGetNodeNum(tree2, rand() % compatibleCount, type).second;
+        int sub2 = treeGetNodeNum(tree2, ts_rand() % compatibleCount, type).second;
 
         return treeReplaceAt(tree2, sub2, subTree1);
     } else {

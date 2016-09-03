@@ -127,7 +127,6 @@ TEST_F(GPTreeTest, SwapsCompatibleSubtrees) {
     }
     {
         auto tree = swapRandomSubtree(tree1, tree2);
-        EXPECT_NE(2, tree->get(context));
         EXPECT_NE(5, tree->get(context));
         cleanupTree(tree);
     }

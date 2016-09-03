@@ -1,8 +1,9 @@
 #ifndef GPNODE_H
 #define GPNODE_H
 
-#include <vector>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 class Context;
 class GPNode;

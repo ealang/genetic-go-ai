@@ -5,11 +5,12 @@
 #include "gpnodes_experimental.h"
 #include "gptree.h"
 #include "evolution_algs.h"
+#include "ts_rand.h"
 
 using namespace std;
 
 float rand01() {
-    return rand() / (RAND_MAX + 1.0);
+    return ts_rand() / (RAND_MAX + 1.0);
 }
 
 int randExcluding(int n, int exclude) {
@@ -17,7 +18,7 @@ int randExcluding(int n, int exclude) {
         return exclude;
     } else {
         while (true) {
-            int v = rand() % n;
+            int v = ts_rand() % n;
             if (v != exclude) {
                 return v;
             }
@@ -28,7 +29,7 @@ int randExcluding(int n, int exclude) {
 GPNode* createRandomAI() {
     static const int NEW_AI_MIN_DEPTH = 1,
                      NEW_AI_MAX_DEPTH = 5;
-    return createRandomTree(NEW_AI_MIN_DEPTH + rand() % (NEW_AI_MAX_DEPTH - NEW_AI_MIN_DEPTH));
+    return createRandomTree(NEW_AI_MIN_DEPTH + ts_rand() % (NEW_AI_MAX_DEPTH - NEW_AI_MIN_DEPTH));
 }
 
 vector<int> populationDropN(const unordered_map<int, float>& scores, unsigned int numDrop) {
@@ -51,7 +52,7 @@ GPNode* mutateAI(const GPNode* ai, int nodeNum) {
     static const int MUTATION_SCALE_MIN = -5, MUTATION_SCALE_MAX = 5;
 
     GPNode* newAi = ai->clone();
-    int scale = MUTATION_SCALE_MIN + rand() % (MUTATION_SCALE_MAX - MUTATION_SCALE_MIN + 1);
+    int scale = MUTATION_SCALE_MIN + ts_rand() % (MUTATION_SCALE_MAX - MUTATION_SCALE_MIN + 1);
     treeGetNodeNum(newAi, nodeNum)->setScale(scale);
     return newAi;
 }
