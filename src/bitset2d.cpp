@@ -3,78 +3,51 @@
 #include <cstring>
 #include "bitset2d.h"
 
-int countBits(uint32_t i) {
-    // http://stackoverflow.com/a/109025
-    i = i - ((i >> 1) & 0x55555555);
-    i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-    return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
-}
-
-int calcSizeBytes(int width, int height) {
-    return (int)ceil(width * height / 32.0);
-}
-
 Bitset2D::Bitset2D(int width, int height):
     width(width),
     height(height),
-    numSet(0),
-    data(std::vector<uint32_t>(calcSizeBytes(width, height)))
-{ }
+    data(), mask()
+{
+    if (width > maxSize || height > maxSize) {
+        throw std::runtime_error("Invalid size");
+    }
+    for (int i = 0; i < width * height; i++) {
+        mask[i] = 1;
+    }
+}
 
 bool Bitset2D::get(int x, int y) const {
     if (x < 0 || x >= width || y < 0 || y >= height)
         throw std::runtime_error("Read out of bounds");
-    int i = x + y * width;
-    return (data[i / 32] & (1 << (i % 32))) != 0;
+    return data[x + y * width];
 }
 
 int Bitset2D::count() const {
-    return numSet;
+    return data.count();
 }
 
 Bitset2D Bitset2D::operator&(const Bitset2D& other) const {
     throwIfIncomatible(*this, other);
     Bitset2D result(width, height);
-    for (unsigned int i = 0; i < result.data.size(); i++) {
-        result.data[i] = data[i] & other.data[i];
-        result.numSet += countBits(result.data[i]);
-    }
+    result.data = data & other.data;
     return result;
 }
 
 Bitset2D Bitset2D::operator~() const {
     Bitset2D result(width, height);
-    for (unsigned int i = 0; i < result.data.size(); i++) {
-        result.data[i] = ~data[i];
-    }
-    result.numSet = width * height - numSet;
+    result.data = ~data & mask;
     return result;
 }
 
 void Bitset2D::set(int x, int y, bool v) {
     if (x < 0 || x >= width || y < 0 || y >= height)
         throw std::runtime_error("Write out of bounds");
-    int i = x + y * width;
-    uint32_t oldVal = data[i / 32],
-             mask = 1 << (i % 32),
-             newVal = (oldVal & ~mask) | (v << (i % 32));
-    if (oldVal != newVal) {
-        data[i / 32] = newVal;
-        if (v) {
-            ++numSet;
-        } else {
-            --numSet;
-        }
-    }
+    data[x + y * width] = v;
 }
 
 Bitset2D& Bitset2D::operator&=(const Bitset2D& other) {
     throwIfIncomatible(*this, other);
-    numSet = 0;
-    for (unsigned int i = 0; i < data.size(); i++) {
-        data[i] &= other.data[i];
-        numSet += countBits(data[i]);
-    }
+    data &= other.data;
     return *this;
 }
 

@@ -2,8 +2,15 @@
 #include "gtest/gtest.h"
 #include "bitset2d.h"
 
+using std::runtime_error;
+
+TEST(Bitset2DTest, RejectsInvalidSize) {
+    ASSERT_THROW(Bitset2D(100, 8), runtime_error);
+    ASSERT_THROW(Bitset2D(8, 100), runtime_error);
+}
+
 TEST(Bitset2DTest, IsInitializedToFalse) {
-    int width = 21, height = 13;
+    int width = 9, height = 8;
     Bitset2D b(width, height);
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
@@ -44,7 +51,7 @@ TEST(Bitset2DTest, CanCountSetBits) {
     ASSERT_EQ(1, a.count());
 }
 
-TEST(Bitset2D, CanInvertBits) {
+TEST(Bitset2DTest, CanInvertBits) {
     int width = 3, height = 1;
     Bitset2D a(width, height);
     a.set(1, 0, true);
@@ -54,23 +61,23 @@ TEST(Bitset2D, CanInvertBits) {
     ASSERT_EQ(2, b.count());
 }
 
-TEST(Bitset2D, CanAndToCreateCopy) {
-    int width = 32, height = 1;
+TEST(Bitset2DTest, CanAndToCreateCopy) {
+    int width = 9, height = 1;
     Bitset2D a(width, height);
     Bitset2D b(width, height);
     a.set(2, 0, true);
     a.set(3, 0, true);
     b.set(1, 0, true);
     b.set(3, 0, true);
-    a.set(31, 0, true);
-    b.set(31, 0, true);
+    a.set(8, 0, true);
+    b.set(8, 0, true);
 
     Bitset2D c = b & a;
     ASSERT_FALSE(c.get(0, 0));
     ASSERT_FALSE(c.get(1, 0));
     ASSERT_FALSE(c.get(2, 0));
     ASSERT_TRUE(c.get(3, 0));
-    ASSERT_TRUE(c.get(31, 0));
+    ASSERT_TRUE(c.get(8, 0));
     ASSERT_EQ(2, c.count());
 }
 
@@ -98,7 +105,7 @@ TEST(Bitset2DTest, CanSetBitsWithShortcutSet) {
 }
 
 TEST(Bitset2DTest, CanSetWithoutAffectingOtherBits) {
-    int width = 11, height = 5;
+    int width = 9, height = 5;
     Bitset2D b(width, height);
     b.set(1, 3, true);
     ASSERT_TRUE(b.get(1, 3));
