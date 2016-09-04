@@ -29,7 +29,7 @@ GPNode* trainAI(int boardSize) {
     
     TrainingOptions options;
     options.populationSize = 100;
-    options.numGenerations = 50;
+    options.numGenerations = 30;
     options.createNewAI = createRandomAI;
     options.evolveFunc = evolvePopulationCrossover;
     options.evScoreFunc = [&evScoring](int boardSize, const vector<const GPNode*>& pop) {

@@ -1,12 +1,20 @@
 # Experimental AI for Go
 
-A program to train a bot and play against it.
+A program to train a Go AI and play against it.
 
-Genetic programming is used to train a function that can score a board. To make a move, the bot scores all possible moves and selects the highest scoring move.
+![alt text](/ss.png "go")
 
-The program creates an initial group of randomly initialized bots, and has pluggable algorithms for scoring and evolving each generation of bots. Bots tended to overspecialize when scored against a static benchmark player, but I found scoring using peer tournaments produced more well rounded bots.
+The more CPU cores the better :+1:
 
-The bots can easily defeat a player that picks moves at random, but they are not human competitive. An enhancement to improve performance would be to look ahead at future moves instead of only considering the current move.
+# Implementation
+
+Each AI player is driven by a function that it can use to assign a score to a move. When picking a move, the AI player scores all possible moves it can make and selects the highest scoring move.
+
+Genetic programming is used to create the function. The program starts with 100 randomly initialized functions and evolves them over 30 rounds. At the end of the run, the best function is returned to play against the user. In each round, AI vs AI games are used to pick the best functions to proceed to the next round, and random mutations are applied to the functions.
+
+Being an experiment, the code allows pluggable algorithms for deciding how to pick the best functions and apply mutations. I found that using AI vs AI games tended to produce more competitive AIs.
+
+While the AIs can easily defeat a player that picks moves at random, they are not human competitive. Some enhancements to improve performance would be to look ahead at future moves instead of only considering the current move, and to provide more ways for AI to read the state of the board.
 
 # Instructions
 
@@ -14,16 +22,28 @@ Run tests (Google test framework is required):
 
     make run_tests
 
-Run main app to train a bot and play against it:
+Run main app to train AI and play against it:
 
     make run_main
 
-Run main app and graph ai progress:
+Graph AI progress:
 
-    make run_graph
+	python graph_progress.py <logfile>
 
 # Demo Run
 
-An example run showing the progress of bots over a few generations. Each data point is a bot. Score is the average score of the bot playing 4 games against a random player on a 7x7 board.
+Meet a bot:
+
+	// Forming clusters of stones is good, scoring is good, having more liberties is good.
+	PlusNode(
+		3 * MaxClusterDeltaNode(),
+		PlusNode(
+			PlusNode(
+				3 * LibertiesDeltaNode(friendly),
+				2 * PlayerScoreDeltaNode()),
+			3 * MaxClusterDeltaNode()))
+
+
+Progress of the AIs over a few generations. Each data point is an AI. Score is the average score of the bot playing 4 games against a random player on a 7x7 board.
 
 ![alt text](/example.png "Training progress")
